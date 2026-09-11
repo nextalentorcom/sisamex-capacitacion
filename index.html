@@ -251,7 +251,7 @@
         // ==========================================
         // CONFIGURACIÓN DE TU SERVIDOR API
         // ==========================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbx4-3filk_dpfnIPEahofmHnafUTNleZEIUsESafmzpCl9gHYk4XIqPIGNRuhuCvMOf/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyOKXWZv_-7QH_4x7FTFt3pxNxX8iaAPyq3-BWAincxRtojcZIsiecm0J3M3GKu-sre/exec";
 
         let datosGlobales = [], equiposGlobales = {}, graficas = {};
         let plantillaCreada = [], listaTodosInstructores = [];
@@ -266,14 +266,15 @@
         const paleta = ['#C8102E', '#111111', '#555555', '#999999', '#EBEBEB', '#FF4D4D', '#333333', '#8B0000', '#A9A9A9'];
         const paletaAzul = ['#2B579A', '#1A365D', '#4A76B8', '#7395C8', '#A1B7D9', '#0F9D58', '#f39c12', '#333333', '#111111'];
 
-        // ==========================================
+       // ==========================================
         // COMUNICACIÓN CON GOOGLE (NUEVO MÉTODO FETCH)
         // ==========================================
         function llamarServidor(action, payload, onSuccess, onFailure) {
             fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: action, ...payload }),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                redirect: 'follow'
             })
             .then(res => res.json())
             .then(result => { if(result.status === "success") onSuccess(result.data); else onFailure({message: result.message}); })
@@ -281,7 +282,7 @@
         }
 
         window.onload = function() {
-            if(API_URL === "PEGAR_AQUI_LA_NUEVA_URL_DE_APPS_SCRIPT") {
+            if(API_URL === "https://script.google.com/macros/s/AKfycbyOKXWZv_-7QH_4x7FTFt3pxNxX8iaAPyq3-BWAincxRtojcZIsiecm0J3M3GKu-sre/exec") {
                 mostrarAlerta("Atención: Necesitas reemplazar 'API_URL' en el código HTML por la URL de tu Apps Script.", "Falta Configuración", "error");
                 return;
             }
@@ -291,11 +292,11 @@
 
         function cargarDatosBase() {
             document.getElementById('loading').style.display = 'block';
-            fetch(API_URL + "?action=getData")
+            fetch(API_URL + "?action=getData", { redirect: 'follow' })
                 .then(res => res.json())
                 .then(data => procesarDatos(data))
                 .catch(e => {
-                    mostrarAlerta("Error de servidor: " + e, "Error de Conexión", "error");
+                    mostrarAlerta("Error de servidor: " + e.message, "Error de Conexión", "error");
                     document.getElementById('loading').style.display = 'none';
                 });
         }
