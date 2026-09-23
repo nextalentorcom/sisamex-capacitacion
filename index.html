@@ -290,7 +290,7 @@
 
             let btnDiv = document.getElementById('btn-capturar-firma'); 
             let txtSpan = document.getElementById('txt-btn-enviar');
-            txtSpan.innerHTML = "⏳ Enviando a Servidor..."; 
+            txtSpan.innerHTML = "⏳ Enviando..."; 
             btnDiv.style.pointerEvents = 'none';
             btnDiv.style.opacity = '0.5';
             
@@ -320,7 +320,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === "OK") { 
-                    mostrarAlerta("✅ Evidencia capturada y guardada en Drive/Excel exitosamente.", "Auditoría Exitosa"); 
+                    mostrarAlerta("✅ Evidencia capturada y guardada en Drive exitosamente.", "Auditoría Exitosa"); 
                     setTimeout(() => location.reload(), 3000); 
                 } else { 
                     mostrarAlerta(data.status, "Error de Apps Script"); 
