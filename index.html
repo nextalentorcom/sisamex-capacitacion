@@ -20,9 +20,8 @@
         #custom-alert { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; }
         .alert-box { background:white; padding:30px; border-radius:10px; max-width:450px; width: 90%; text-align:center; color: #111; }
         
-        /* Layouts Flexbox para los distintos pasos */
-        .flex-row { display: flex; flex-direction: row; gap: 30px; align-items: stretch; text-align: left; }
-        .flex-col { display: flex; flex-direction: column; }
+        /* Layouts Flexbox */
+        .flex-col { display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
         /* Scrollbar styling */
         ::-webkit-scrollbar { width: 8px; }
@@ -42,81 +41,75 @@
         <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
     </div>
 
-    <!-- PANTALLA 2: LISTA DE CURSOS (Diseño Horizontal) -->
-    <div class="sala-dark flex-row" id="sala-lista-cursos" style="display: none; max-width: 1000px; padding: 50px;">
-        <!-- Lado Izquierdo -->
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 20px;">
-            <h1 style="font-size: 40px; margin-bottom: 15px; line-height: 1.2;">Cursos<br>programados<br>para hoy</h1>
+    <!-- PANTALLA 2: LISTA DE CURSOS (Título Arriba, Botón Abajo) -->
+    <div class="sala-dark flex-col" id="sala-lista-cursos" style="display: none; max-width: 800px;">
+        
+        <!-- Título Superior -->
+        <div style="text-align: center; width: 100%;">
+            <h1 style="font-size: 32px; margin-bottom: 5px; line-height: 1.2;">Cursos programados para hoy</h1>
             <p id="txt-fecha-hoy" style="color: #aaa; font-size: 16px; margin: 0;"></p>
         </div>
         
-        <!-- Lado Derecho (Scroll de Cursos y Botón Cerrar) -->
-        <div style="flex: 2; display: flex; gap: 15px;">
-            <div id="contenedor-cursos-hoy" style="flex: 1; max-height: 450px; overflow-y: auto; padding-right: 15px; display: flex; flex-direction: column; gap: 15px;">
-                <!-- Las tarjetas de curso entran aquí por JS -->
-            </div>
-            <!-- Bloque Vertical Cerrar Sesión -->
-            <div style="background-color: #444; width: 100px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="location.reload()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                <span style="color: white; font-weight: bold; text-align: center; font-size: 16px;">Cerrar<br>Sesión</span>
-            </div>
+        <!-- Lista de Cursos -->
+        <div id="contenedor-cursos-hoy" style="width: 100%; max-height: 400px; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 15px;">
+            <!-- Tarjetas de curso -->
+        </div>
+
+        <!-- Botón Inferior -->
+        <div style="width: 100%; text-align: center; margin-top: 10px;">
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
     </div>
 
-    <!-- PANTALLA 3: CURSO ACTIVO Y TEMPORIZADOR (Diseño Horizontal) -->
-    <div class="sala-dark flex-row" id="sala-activa" style="display: none; max-width: 900px; align-items: center; justify-content: space-between; padding: 50px;">
-        <!-- Lado Izquierdo (Info Curso) -->
-        <div class="curso-box" style="flex: 1; max-width: 350px; margin: 0;">
+    <!-- PANTALLA 3: CURSO ACTIVO Y TEMPORIZADOR -->
+    <div class="sala-dark flex-col" id="sala-activa" style="display: none; max-width: 700px;">
+        <div class="curso-box" style="width: 100%;">
             <h3 style="color: #0F9D58; margin-bottom: 15px; font-size: 24px;" id="sala-curso-titulo"></h3>
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Instructor:</strong> <span id="sala-curso-inst"></span></p>
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Grupo:</strong> <span id="sala-curso-grupo"></span></p>
         </div>
         
-        <!-- Lado Derecho (Timer y Botón) -->
-        <div style="flex: 1; text-align: center;">
+        <div style="text-align: center; width: 100%; margin-top: 20px;">
             <p style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante de sesión obligatoria:</p>
             <div class="timer-gigante" id="timer-display">00:00:00</div>
-            <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: none; margin-top: 20px;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
+            <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: none; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
         </div>
     </div>
 
-    <!-- PANTALLA 4: EVIDENCIA, CÁMARA Y FIRMA (Diseño Horizontal de 3 Columnas) -->
-    <div class="sala-dark flex-row" id="sala-firma" style="display: none; max-width: 1000px; padding: 40px;">
+    <!-- PANTALLA 4: EVIDENCIA, CÁMARA Y FIRMA (Título Arriba, Botones Abajo) -->
+    <div class="sala-dark flex-col" id="sala-firma" style="display: none; max-width: 800px; padding: 40px;">
         
-        <!-- Columna 1: Títulos -->
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-            <h2 style="color: #fff; margin-bottom: 15px; font-size: 32px; line-height: 1.2;">✍️ Evidencia<br>y<br>Conformidad</h2>
-            <p style="color: #aaa; font-size: 16px; line-height: 1.5;">Permite el acceso a la cámara y dibuja tu firma para finalizar.</p>
+        <!-- Título Superior -->
+        <div style="text-align: center; width: 100%; margin-bottom: 20px;">
+            <h2 style="color: #fff; margin-bottom: 5px; font-size: 32px;">✍️ Evidencia y Conformidad</h2>
+            <p style="color: #aaa; font-size: 16px;">Permite el acceso a la cámara y dibuja tu firma para finalizar.</p>
         </div>
         
-        <!-- Columna 2: Cámara y Canvas Apilados -->
-        <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center;">
+        <!-- Contenedor Medio: Cámara y Firma Lado a Lado -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%;">
             <!-- Cámara Web -->
-            <div style="background: #000; border-radius: 8px; overflow: hidden; width: 300px; height: 180px; position: relative; border: 2px solid #555;">
-                <video id="videoCamara" width="300" height="180" autoplay muted playsinline style="object-fit: cover; width: 100%; height: 100%; display: none;"></video>
-                <canvas id="canvasFotoCam" width="300" height="180" style="display:none; width: 100%; height: 100%; object-fit: cover;"></canvas>
+            <div style="background: #000; border-radius: 8px; overflow: hidden; width: 320px; height: 200px; position: relative; border: 2px solid #555;">
+                <video id="videoCamara" width="320" height="200" autoplay muted playsinline style="object-fit: cover; width: 100%; height: 100%; display: none;"></video>
+                <canvas id="canvasFotoCam" width="320" height="200" style="display:none; width: 100%; height: 100%; object-fit: cover;"></canvas>
                 <div id="fallbackCamara" style="position: absolute; top: 40%; width: 100%; text-align: center; color:#aaa; font-size:14px; display:none;">Cámara apagada</div>
                 
-                <div style="position: absolute; bottom: 5px; width: 100%; text-align: center; z-index: 10;">
-                    <button id="btn-tomar-foto" onclick="tomarFoto()" class="btn-action" style="background-color: #2B579A; padding: 5px 15px; font-size: 13px; display:none; border-radius: 20px;">📸 Capturar</button>
-                    <button id="btn-retomar-foto" onclick="retomarFoto()" class="btn-action" style="background-color: #555; padding: 5px 15px; font-size: 13px; display:none; border-radius: 20px;">🔄 Retomar</button>
+                <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; z-index: 10;">
+                    <button id="btn-tomar-foto" onclick="tomarFoto()" class="btn-action" style="background-color: #2B579A; padding: 8px 20px; font-size: 14px; display:none; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">📸 Capturar</button>
+                    <button id="btn-retomar-foto" onclick="retomarFoto()" class="btn-action" style="background-color: #555; padding: 8px 20px; font-size: 14px; display:none; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">🔄 Retomar</button>
                 </div>
             </div>
             
             <!-- Firma -->
-            <div style="background: white; border-radius: 8px; overflow: hidden; width: 300px; height: 150px; position: relative;">
-                <canvas id="canvasFirma" width="300" height="150" style="cursor: crosshair; touch-action: none; display: block;"></canvas>
+            <div style="background: white; border-radius: 8px; overflow: hidden; width: 320px; height: 200px; position: relative;">
+                <canvas id="canvasFirma" width="320" height="200" style="cursor: crosshair; touch-action: none; display: block;"></canvas>
                 <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; color: #ccc; font-size: 12px; pointer-events: none;">Área de Firma</div>
             </div>
         </div>
         
-        <!-- Columna 3: Botones de Acción Gigantes Verticales -->
-        <div style="display: flex; flex-direction: column; gap: 15px; width: 140px;">
-            <div style="flex: 1; background-color: #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="limpiarFirma()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                <span style="color: white; font-weight: bold; text-align: center; font-size: 16px;">Borrar<br>Firma</span>
-            </div>
-            <div id="btn-capturar-firma" style="flex: 1.5; background-color: #0F9D58; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="guardarFirmaYEnviar()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                <span id="txt-btn-enviar" style="color: white; font-weight: bold; text-align: center; font-size: 16px;">✅<br>Confirmar<br>y Enviar</span>
-            </div>
+        <!-- Botones Inferiores -->
+        <div style="display: flex; gap: 20px; justify-content: center; width: 100%; margin-top: 30px; flex-wrap: wrap;">
+            <button class="btn-action" style="background-color: #555; font-size: 18px; padding: 15px 40px; min-width: 200px;" onclick="limpiarFirma()">Borrar Firma</button>
+            <button class="btn-action" id="btn-capturar-firma" style="background-color: #0F9D58; font-size: 18px; padding: 15px 40px; min-width: 200px;" onclick="guardarFirmaYEnviar()"><span id="txt-btn-enviar">✅ Confirmar y Enviar</span></button>
         </div>
     </div>
 
@@ -125,7 +118,7 @@
         <div class="alert-box">
             <h3 id="custom-alert-title" style="margin-top:0; font-size: 22px;">Mensaje</h3>
             <p id="custom-alert-msg" style="font-size:16px; margin: 15px 0;"></p>
-            <button onclick="document.getElementById('custom-alert').style.display='none'" class="btn-action" style="background-color: #0F9D58;">Aceptar</button>
+            <button onclick="document.getElementById('custom-alert').style.display='none'" class="btn-action" style="background-color: #0F9D58; width: 100%;">Aceptar</button>
         </div>
     </div>
 
@@ -185,7 +178,7 @@
             let d = hoyObj.getDate().toString().padStart(2, '0');
             let fechaHoyStr = y + "-" + m + "-" + d;
             
-            document.getElementById('txt-fecha-hoy').innerText = "Fecha actual detectada:\n" + d + "/" + m + "/" + y;
+            document.getElementById('txt-fecha-hoy').innerText = "Fecha: " + d + "/" + m + "/" + y;
 
             let cursosInduccion = datosGlobales.filter(c => c.fecha === fechaHoyStr && c.instructor !== "Por asignar" && !c.temaAgrupado.toUpperCase().includes("COMIDA"));
             let cursosPlanC = datosPC.filter(c => c.fechaA === fechaHoyStr && c.instructor !== "Por asignar");
@@ -323,7 +316,7 @@
 
             let btnDiv = document.getElementById('btn-capturar-firma'); 
             let txtSpan = document.getElementById('txt-btn-enviar');
-            txtSpan.innerHTML = "⏳<br>Enviando a<br>Servidor..."; 
+            txtSpan.innerHTML = "⏳ Enviando a Servidor..."; 
             btnDiv.style.pointerEvents = 'none';
             btnDiv.style.opacity = '0.5';
             
@@ -357,14 +350,14 @@
                     setTimeout(() => location.reload(), 3000); 
                 } else { 
                     mostrarAlerta(data.status, "Error de Apps Script"); 
-                    txtSpan.innerHTML = "✅<br>Confirmar<br>y Enviar"; 
+                    txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
                     btnDiv.style.pointerEvents = 'auto';
                     btnDiv.style.opacity = '1';
                 }
             })
             .catch(err => { 
                 mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); 
-                txtSpan.innerHTML = "✅<br>Confirmar<br>y Enviar"; 
+                txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
                 btnDiv.style.pointerEvents = 'auto';
                 btnDiv.style.opacity = '1';
             });
