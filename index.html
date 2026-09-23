@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditoría Instructor - SISAMEX</title>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; padding: 20px 0;}
         .sala-dark { background-color: #1a1a1a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 95%; max-width: 900px; margin: auto; }
         
         .btn-action { color: white; border: none; padding: 12px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
@@ -22,12 +22,6 @@
         
         /* Layouts Flexbox */
         .flex-col { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #888; }
     </style>
 </head>
 <body>
@@ -41,22 +35,20 @@
         <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
     </div>
 
-    <!-- PANTALLA 2: LISTA DE CURSOS (Título Arriba, Botón Abajo) -->
+    <!-- PANTALLA 2: LISTA DE CURSOS (Diseño Infinito) -->
     <div class="sala-dark flex-col" id="sala-lista-cursos" style="display: none; max-width: 800px;">
         
-        <!-- Título Superior -->
         <div style="text-align: center; width: 100%;">
             <h1 style="font-size: 32px; margin-bottom: 5px; line-height: 1.2;">Cursos programados para hoy</h1>
             <p id="txt-fecha-hoy" style="color: #aaa; font-size: 16px; margin: 0;"></p>
         </div>
         
-        <!-- Lista de Cursos -->
-        <div id="contenedor-cursos-hoy" style="width: 100%; max-height: 400px; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 15px;">
+        <!-- Contenedor sin límite de altura -->
+        <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;">
             <!-- Tarjetas de curso -->
         </div>
 
-        <!-- Botón Inferior -->
-        <div style="width: 100%; text-align: center; margin-top: 10px;">
+        <div style="width: 100%; text-align: center; margin-top: 15px;">
             <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
     </div>
@@ -76,16 +68,14 @@
         </div>
     </div>
 
-    <!-- PANTALLA 4: EVIDENCIA, CÁMARA Y FIRMA (Título Arriba, Botones Abajo) -->
+    <!-- PANTALLA 4: EVIDENCIA, CÁMARA Y FIRMA -->
     <div class="sala-dark flex-col" id="sala-firma" style="display: none; max-width: 800px; padding: 40px;">
         
-        <!-- Título Superior -->
         <div style="text-align: center; width: 100%; margin-bottom: 20px;">
             <h2 style="color: #fff; margin-bottom: 5px; font-size: 32px;">✍️ Evidencia y Conformidad</h2>
             <p style="color: #aaa; font-size: 16px;">Permite el acceso a la cámara y dibuja tu firma para finalizar.</p>
         </div>
         
-        <!-- Contenedor Medio: Cámara y Firma Lado a Lado -->
         <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%;">
             <!-- Cámara Web -->
             <div style="background: #000; border-radius: 8px; overflow: hidden; width: 320px; height: 200px; position: relative; border: 2px solid #555;">
@@ -106,7 +96,6 @@
             </div>
         </div>
         
-        <!-- Botones Inferiores -->
         <div style="display: flex; gap: 20px; justify-content: center; width: 100%; margin-top: 30px; flex-wrap: wrap;">
             <button class="btn-action" style="background-color: #555; font-size: 18px; padding: 15px 40px; min-width: 200px;" onclick="limpiarFirma()">Borrar Firma</button>
             <button class="btn-action" id="btn-capturar-firma" style="background-color: #0F9D58; font-size: 18px; padding: 15px 40px; min-width: 200px;" onclick="guardarFirmaYEnviar()"><span id="txt-btn-enviar">✅ Confirmar y Enviar</span></button>
@@ -124,7 +113,7 @@
 
     <script>
         // =========================================================
-        //
+        // 🔴🔴 PEGA AQUÍ LA URL DE TU SCRIPT DE GOOGLE 🔴🔴
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
         // =========================================================
 
