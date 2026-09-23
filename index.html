@@ -35,7 +35,7 @@
         <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
     </div>
 
-    <!-- PANTALLA 2: LISTA DE CURSOS (Diseño Infinito) -->
+    <!-- PANTALLA 2: LISTA DE CURSOS -->
     <div class="sala-dark flex-col" id="sala-lista-cursos" style="display: none; max-width: 800px;">
         
         <div style="text-align: center; width: 100%;">
@@ -43,7 +43,6 @@
             <p id="txt-fecha-hoy" style="color: #aaa; font-size: 16px; margin: 0;"></p>
         </div>
         
-        <!-- Contenedor sin límite de altura -->
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;">
             <!-- Tarjetas de curso -->
         </div>
@@ -143,6 +142,14 @@
                 fetch(API_URL + "?action=api_cursos")
                     .then(response => response.json())
                     .then(data => {
+                        // AQUÍ VERIFICAMOS SI GOOGLE TE HIZO TRAMPA CON EL CACHÉ VIEJO
+                        if(data.version !== "v2_limpia") {
+                            mostrarAlerta("⚠️ ESTÁS USANDO UN ENLACE VIEJO DE GOOGLE.\n\nPor favor ve a Apps Script, haz clic en 'Implementar' > 'Administrar implementaciones' > Editar (Lápiz) > 'Nueva versión' > 'Implementar'. Luego copia el nuevo enlace y pégalo en tu código de GitHub.", "Error Crítico");
+                            btn.innerText = "Ingresar";
+                            btn.disabled = false;
+                            return;
+                        }
+
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
