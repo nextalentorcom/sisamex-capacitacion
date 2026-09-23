@@ -6,70 +6,117 @@
     <title>Auditoría Instructor - SISAMEX</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        .sala-dark { background-color: #1a1a1a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); max-width: 800px; width: 95%; }
-        .btn-action { background-color: #0F9D58; color: white; border: none; padding: 12px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
+        .sala-dark { background-color: #1a1a1a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 95%; max-width: 900px; margin: auto; }
+        
+        .btn-action { color: white; border: none; padding: 12px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
         .btn-action:hover { opacity: 0.8; }
-        .btn-action:disabled { background-color: #555; cursor: not-allowed; }
+        .btn-action:disabled { background-color: #555 !important; cursor: not-allowed; }
+        
         .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 300px; margin-bottom: 20px; outline: none; background: #222; color: white; }
-        .timer-gigante { font-size: 80px; font-weight: bold; color: #C8102E; margin: 20px 0; font-family: monospace; }
-        .curso-box { background: #222; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #0F9D58; text-align: left; }
+        
+        .timer-gigante { font-size: 90px; font-weight: bold; color: #C8102E; margin: 0; font-family: monospace; }
+        .curso-box { background: #222; padding: 20px; border-radius: 8px; border-left: 5px solid #0F9D58; text-align: left; }
+        
         #custom-alert { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; }
         .alert-box { background:white; padding:30px; border-radius:10px; max-width:450px; width: 90%; text-align:center; color: #111; }
+        
+        /* Layouts Flexbox para los distintos pasos */
+        .flex-row { display: flex; flex-direction: row; gap: 30px; align-items: stretch; text-align: left; }
+        .flex-col { display: flex; flex-direction: column; }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #888; }
     </style>
 </head>
 <body>
 
+    <!-- PANTALLA 1: LOGIN -->
     <div class="sala-dark" id="sala-login">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa la clave de acceso de Instructor.</p>
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña">
         <br>
-        <button class="btn-action" id="btn-login" onclick="verificarPassInstructor()">Ingresar</button>
+        <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
     </div>
 
-    <div class="sala-dark" id="sala-lista-cursos" style="display: none;">
-        <h1 style="font-size: 28px; margin-bottom: 10px;">Cursos programados para hoy</h1>
-        <p id="txt-fecha-hoy" style="font-size: 16px; color: #aaa; margin-bottom: 30px;"></p>
-        <div id="contenedor-cursos-hoy" style="width: 100%; max-height: 400px; overflow-y: auto;"></div>
-        <button class="btn-action" style="background-color: #555; margin-top: 20px;" onclick="location.reload()">Cerrar Sesión</button>
-    </div>
-
-    <div class="sala-dark" id="sala-activa" style="display: none;">
-        <div class="curso-box">
-            <h3 style="color: #0F9D58; margin-bottom: 10px; font-size: 20px;" id="sala-curso-titulo"></h3>
-            <p style="margin: 5px 0; color: #ddd;"><strong>Instructor:</strong> <span id="sala-curso-inst"></span></p>
-            <p style="margin: 5px 0; color: #ddd;"><strong>Grupo:</strong> <span id="sala-curso-grupo"></span></p>
+    <!-- PANTALLA 2: LISTA DE CURSOS (Diseño Horizontal) -->
+    <div class="sala-dark flex-row" id="sala-lista-cursos" style="display: none; max-width: 1000px; padding: 50px;">
+        <!-- Lado Izquierdo -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding-right: 20px;">
+            <h1 style="font-size: 40px; margin-bottom: 15px; line-height: 1.2;">Cursos<br>programados<br>para hoy</h1>
+            <p id="txt-fecha-hoy" style="color: #aaa; font-size: 16px; margin: 0;"></p>
         </div>
-        <p style="font-size: 18px; color: #aaa;">Tiempo restante de sesión obligatoria:</p>
-        <div class="timer-gigante" id="timer-display">00:00:00</div>
-        <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 50px; display: none; margin-top: 20px;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
+        
+        <!-- Lado Derecho (Scroll de Cursos y Botón Cerrar) -->
+        <div style="flex: 2; display: flex; gap: 15px;">
+            <div id="contenedor-cursos-hoy" style="flex: 1; max-height: 450px; overflow-y: auto; padding-right: 15px; display: flex; flex-direction: column; gap: 15px;">
+                <!-- Las tarjetas de curso entran aquí por JS -->
+            </div>
+            <!-- Bloque Vertical Cerrar Sesión -->
+            <div style="background-color: #444; width: 100px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="location.reload()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <span style="color: white; font-weight: bold; text-align: center; font-size: 16px;">Cerrar<br>Sesión</span>
+            </div>
+        </div>
     </div>
 
-    <div class="sala-dark" id="sala-firma" style="display: none;">
-        <h2 style="color: #fff; margin-bottom: 10px;">✍️ Evidencia y Conformidad</h2>
-        <p style="color: #aaa; margin-bottom: 20px;">Permite el acceso a la cámara y dibuja tu firma para finalizar.</p>
+    <!-- PANTALLA 3: CURSO ACTIVO Y TEMPORIZADOR (Diseño Horizontal) -->
+    <div class="sala-dark flex-row" id="sala-activa" style="display: none; max-width: 900px; align-items: center; justify-content: space-between; padding: 50px;">
+        <!-- Lado Izquierdo (Info Curso) -->
+        <div class="curso-box" style="flex: 1; max-width: 350px; margin: 0;">
+            <h3 style="color: #0F9D58; margin-bottom: 15px; font-size: 24px;" id="sala-curso-titulo"></h3>
+            <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Instructor:</strong> <span id="sala-curso-inst"></span></p>
+            <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Grupo:</strong> <span id="sala-curso-grupo"></span></p>
+        </div>
         
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
-            <!-- Cámara Web Nativa de GitHub -->
-            <div style="background: #000; border-radius: 8px; overflow: hidden; width: 320px; height: 200px; position: relative; border: 2px solid #555;">
-                <video id="videoCamara" width="320" height="200" autoplay muted playsinline style="object-fit: cover; width: 100%; height: 100%;"></video>
-                <canvas id="canvasFotoCam" width="320" height="200" style="display:none; width: 100%; height: 100%; object-fit: cover;"></canvas>
-                <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center;">
-                    <button id="btn-tomar-foto" onclick="tomarFoto()" class="btn-action" style="background-color: #2B579A; padding: 5px 15px; font-size: 13px; border-radius: 20px;">📸 Capturar Foto</button>
+        <!-- Lado Derecho (Timer y Botón) -->
+        <div style="flex: 1; text-align: center;">
+            <p style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante de sesión obligatoria:</p>
+            <div class="timer-gigante" id="timer-display">00:00:00</div>
+            <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: none; margin-top: 20px;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: EVIDENCIA, CÁMARA Y FIRMA (Diseño Horizontal de 3 Columnas) -->
+    <div class="sala-dark flex-row" id="sala-firma" style="display: none; max-width: 1000px; padding: 40px;">
+        
+        <!-- Columna 1: Títulos -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <h2 style="color: #fff; margin-bottom: 15px; font-size: 32px; line-height: 1.2;">✍️ Evidencia<br>y<br>Conformidad</h2>
+            <p style="color: #aaa; font-size: 16px; line-height: 1.5;">Permite el acceso a la cámara y dibuja tu firma para finalizar.</p>
+        </div>
+        
+        <!-- Columna 2: Cámara y Canvas Apilados -->
+        <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center;">
+            <!-- Cámara Web -->
+            <div style="background: #000; border-radius: 8px; overflow: hidden; width: 300px; height: 180px; position: relative; border: 2px solid #555;">
+                <video id="videoCamara" width="300" height="180" autoplay muted playsinline style="object-fit: cover; width: 100%; height: 100%; display: none;"></video>
+                <canvas id="canvasFotoCam" width="300" height="180" style="display:none; width: 100%; height: 100%; object-fit: cover;"></canvas>
+                <div id="fallbackCamara" style="position: absolute; top: 40%; width: 100%; text-align: center; color:#aaa; font-size:14px; display:none;">Cámara apagada</div>
+                
+                <div style="position: absolute; bottom: 5px; width: 100%; text-align: center; z-index: 10;">
+                    <button id="btn-tomar-foto" onclick="tomarFoto()" class="btn-action" style="background-color: #2B579A; padding: 5px 15px; font-size: 13px; display:none; border-radius: 20px;">📸 Capturar</button>
                     <button id="btn-retomar-foto" onclick="retomarFoto()" class="btn-action" style="background-color: #555; padding: 5px 15px; font-size: 13px; display:none; border-radius: 20px;">🔄 Retomar</button>
                 </div>
             </div>
             
             <!-- Firma -->
-            <div style="background: white; border-radius: 8px; overflow: hidden; width: 320px; height: 200px; position: relative;">
-                <canvas id="canvasFirma" width="320" height="200" style="cursor: crosshair; touch-action: none; display: block;"></canvas>
+            <div style="background: white; border-radius: 8px; overflow: hidden; width: 300px; height: 150px; position: relative;">
+                <canvas id="canvasFirma" width="300" height="150" style="cursor: crosshair; touch-action: none; display: block;"></canvas>
                 <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; color: #ccc; font-size: 12px; pointer-events: none;">Área de Firma</div>
             </div>
         </div>
         
-        <div style="display: flex; gap: 15px; justify-content: center;">
-            <button class="btn-action" style="background-color: #555;" onclick="limpiarFirma()">Borrar Firma</button>
-            <button class="btn-action" id="btn-capturar-firma" style="background-color: #0F9D58;" onclick="guardarFirmaYEnviar()">✅ Confirmar y Enviar a Drive</button>
+        <!-- Columna 3: Botones de Acción Gigantes Verticales -->
+        <div style="display: flex; flex-direction: column; gap: 15px; width: 140px;">
+            <div style="flex: 1; background-color: #555; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="limpiarFirma()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <span style="color: white; font-weight: bold; text-align: center; font-size: 16px;">Borrar<br>Firma</span>
+            </div>
+            <div id="btn-capturar-firma" style="flex: 1.5; background-color: #0F9D58; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s;" onclick="guardarFirmaYEnviar()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                <span id="txt-btn-enviar" style="color: white; font-weight: bold; text-align: center; font-size: 16px;">✅<br>Confirmar<br>y Enviar</span>
+            </div>
         </div>
     </div>
 
@@ -78,7 +125,7 @@
         <div class="alert-box">
             <h3 id="custom-alert-title" style="margin-top:0; font-size: 22px;">Mensaje</h3>
             <p id="custom-alert-msg" style="font-size:16px; margin: 15px 0;"></p>
-            <button onclick="document.getElementById('custom-alert').style.display='none'" class="btn-action">Aceptar</button>
+            <button onclick="document.getElementById('custom-alert').style.display='none'" class="btn-action" style="background-color: #0F9D58;">Aceptar</button>
         </div>
     </div>
 
@@ -111,7 +158,6 @@
                 btn.innerText = "Conectando con Servidor SISAMEX... ⏳";
                 btn.disabled = true;
 
-                // CONEXIÓN CON APPS SCRIPT PARA OBTENER LOS CURSOS
                 fetch(API_URL + "?action=api_cursos")
                     .then(response => response.json())
                     .then(data => {
@@ -139,7 +185,7 @@
             let d = hoyObj.getDate().toString().padStart(2, '0');
             let fechaHoyStr = y + "-" + m + "-" + d;
             
-            document.getElementById('txt-fecha-hoy').innerText = "Fecha actual detectada: " + d + "/" + m + "/" + y;
+            document.getElementById('txt-fecha-hoy').innerText = "Fecha actual detectada:\n" + d + "/" + m + "/" + y;
 
             let cursosInduccion = datosGlobales.filter(c => c.fecha === fechaHoyStr && c.instructor !== "Por asignar" && !c.temaAgrupado.toUpperCase().includes("COMIDA"));
             let cursosPlanC = datosPC.filter(c => c.fechaA === fechaHoyStr && c.instructor !== "Por asignar");
@@ -157,11 +203,11 @@
             }
 
             cursosDeHoyLista.forEach((curso, index) => {
-                let m = curso.minutos; let textMin = m > 0 ? (m + " minutos") : "Sin tiempo";
+                let m = curso.minutos; let textMin = m > 0 ? (m + " mins") : "Sin tiempo";
                 let cardHTML = `<div class="curso-box" style="display:flex; justify-content:space-between; align-items:center;">
                     <div><h4 style="margin: 0 0 5px 0; color: #fff; font-size: 18px;">${curso.curso}</h4>
-                    <p style="margin: 0; color: #aaa; font-size: 14px;"><strong>Instructor:</strong> ${curso.instructor} | <strong>Hora:</strong> ${curso.horario} | <strong>Duración:</strong> ${textMin}</p></div>
-                    <button class="btn-action" onclick="iniciarSesionCurso(${index})">Iniciar</button>
+                    <p style="margin: 0; color: #aaa; font-size: 13px;"><strong>Instructor:</strong> ${curso.instructor} | <strong>Hora:</strong> ${curso.horario} | <strong>Duración:</strong> ${textMin}</p></div>
+                    <button class="btn-action" style="background-color:#0F9D58; padding: 10px 20px;" onclick="iniciarSesionCurso(${index})">Iniciar</button>
                 </div>`;
                 contenedor.innerHTML += cardHTML;
             });
@@ -216,15 +262,28 @@
             canvasFirma.ontouchmove = (e) => { e.preventDefault(); if (dibujando) { let pos = getPos(e); ctxFirma.lineTo(pos.x, pos.y); ctxFirma.stroke(); } };
             canvasFirma.ontouchend = (e) => { e.preventDefault(); dibujando = false; ctxFirma.closePath(); };
 
-            // ENCENDEMOS LA CÁMARA (Como estamos en GitHub, ¡esto funcionará perfecto!)
             if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true })
                     .then(function(stream) {
                         streamCamara = stream;
                         var video = document.getElementById('videoCamara');
                         video.srcObject = stream;
+                        video.play();
+                        
+                        video.style.display = 'block';
+                        document.getElementById('canvasFotoCam').style.display = 'none';
+                        document.getElementById('fallbackCamara').style.display = 'none';
+                        
+                        document.getElementById('btn-tomar-foto').style.display = 'inline-block';
+                        document.getElementById('btn-retomar-foto').style.display = 'none';
                     })
-                    .catch(function(err) { console.warn("Cámara denegada: ", err); });
+                    .catch(function(err) {
+                        console.warn("Cámara denegada: ", err);
+                        document.getElementById('fallbackCamara').style.display = 'block';
+                        document.getElementById('videoCamara').style.display = 'none';
+                    });
+            } else {
+                document.getElementById('fallbackCamara').style.display = 'block';
             }
         }
 
@@ -248,18 +307,34 @@
             fotoTomada = false;
         }
 
-        function limpiarFirma() { ctxFirma.globalCompositeOperation = "source-over"; ctxFirma.fillStyle = "#FFFFFF"; ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height); ctxFirma.strokeStyle = "#000000"; ctxFirma.lineWidth = 3; ctxFirma.lineCap = "round"; haFirmado = false; }
+        function limpiarFirma() { 
+            ctxFirma.globalCompositeOperation = "source-over"; 
+            ctxFirma.fillStyle = "#FFFFFF"; 
+            ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height); 
+            ctxFirma.strokeStyle = "#000000"; 
+            ctxFirma.lineWidth = 3; 
+            ctxFirma.lineCap = "round"; 
+            haFirmado = false; 
+        }
 
         function guardarFirmaYEnviar() {
             if(!haFirmado) return mostrarAlerta("Por favor, dibuja tu firma en el recuadro blanco.");
-            if(!fotoTomada) return mostrarAlerta("Por favor, haz clic en 'Capturar Foto'.");
+            if(!fotoTomada && streamCamara) return mostrarAlerta("Por favor, haz clic en 'Capturar Foto'.");
 
-            let btn = document.getElementById('btn-capturar-firma'); 
-            btn.innerText = "🚀 Enviando a Servidor..."; 
-            btn.disabled = true;
+            let btnDiv = document.getElementById('btn-capturar-firma'); 
+            let txtSpan = document.getElementById('txt-btn-enviar');
+            txtSpan.innerHTML = "⏳<br>Enviando a<br>Servidor..."; 
+            btnDiv.style.pointerEvents = 'none';
+            btnDiv.style.opacity = '0.5';
             
             let base64Firma = canvasFirma.toDataURL('image/jpeg', 0.9).split(',')[1];
-            let base64Foto = document.getElementById('canvasFotoCam').toDataURL('image/jpeg', 0.8).split(',')[1];
+            
+            var base64Foto = "NO_CAMERA";
+            if (fotoTomada) {
+                var canvasFoto = document.getElementById('canvasFotoCam');
+                base64Foto = canvasFoto.toDataURL('image/jpeg', 0.8).split(',')[1];
+            }
+
             let ahora = new Date(); let horaFinTexto = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString().padStart(2, '0');
             let nombreArchivoCorto = cursoAuditando.fecha.replace(/-/g, '') + "_" + cursoAuditando.instructor.split(" ")[0] + "_" + cursoAuditando.curso.substring(0, 10).replace(/\s/g, '');
             
@@ -269,7 +344,6 @@
                 horaFin: horaFinTexto, imagenBase64: base64Firma, fotoBase64: base64Foto, nombreArchivo: nombreArchivoCorto 
             };
 
-            // EL PUENTE HACIA GOOGLE APPS SCRIPT Y DRIVE
             fetch(API_URL, {
                 method: "POST",
                 redirect: "follow",
@@ -280,15 +354,19 @@
             .then(data => {
                 if (data.status === "OK") { 
                     mostrarAlerta("✅ Evidencia capturada y guardada en Drive/Excel exitosamente.", "Auditoría Exitosa"); 
-                    setTimeout(() => location.reload(), 3000); // Recarga para el siguiente instructor
+                    setTimeout(() => location.reload(), 3000); 
                 } else { 
                     mostrarAlerta(data.status, "Error de Apps Script"); 
-                    btn.innerText = "✅ Confirmar y Enviar a Drive"; btn.disabled = false; 
+                    txtSpan.innerHTML = "✅<br>Confirmar<br>y Enviar"; 
+                    btnDiv.style.pointerEvents = 'auto';
+                    btnDiv.style.opacity = '1';
                 }
             })
             .catch(err => { 
                 mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); 
-                btn.innerText = "✅ Confirmar y Enviar a Drive"; btn.disabled = false; 
+                txtSpan.innerHTML = "✅<br>Confirmar<br>y Enviar"; 
+                btnDiv.style.pointerEvents = 'auto';
+                btnDiv.style.opacity = '1';
             });
         }
     </script>
