@@ -73,7 +73,6 @@
                 </div>
             </div>
             
-            <!-- ✅ CANVAS MODIFICADO: Más rectangular (320x120) para encajar perfecto en el Excel -->
             <div style="background: white; border-radius: 8px; overflow: hidden; width: 320px; height: 120px; position: relative; margin-top: 40px;">
                 <canvas id="canvasFirma" width="320" height="120" style="cursor: crosshair; touch-action: none; display: block;"></canvas>
                 <div style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; color: #ccc; font-size: 12px; pointer-events: none;">Área de Firma</div>
@@ -96,7 +95,7 @@
 
     <script>
         // =========================================================
-        // PEGA AQUÍ LA URL DE TU SCRIPT DE GOOGLE
+        // PEGA AQUÍ LA URL DE TU SCRIPT DE GOOGLE 
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
         // =========================================================
 
@@ -128,13 +127,6 @@
                 fetch(enlaceFresco)
                     .then(response => response.json())
                     .then(data => {
-                        if(data.version !== "v7_firma_perfecta") {
-                            mostrarAlerta("⚠️ ESTÁS USANDO UN ENLACE VIEJO DE GOOGLE.\n\nPor favor ve a Apps Script, haz clic en 'Implementar' > 'Administrar implementaciones' > Editar (Lápiz) > 'Nueva versión' > 'Implementar'. Luego copia el nuevo enlace y pégalo en tu código de GitHub.", "Error Crítico");
-                            btn.innerText = "Ingresar";
-                            btn.disabled = false;
-                            return;
-                        }
-
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
