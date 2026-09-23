@@ -112,7 +112,7 @@
 
     <script>
         // =========================================================
-        // 🔴🔴 PEGA AQUÍ LA URL DE TU SCRIPT DE GOOGLE 🔴🔴
+        //  PEGAR AQUÍ LA URL DE TU SCRIPT DE GOOGLE 
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
         // =========================================================
 
@@ -139,17 +139,12 @@
                 btn.innerText = "Conectando con Servidor SISAMEX... ⏳";
                 btn.disabled = true;
 
-                fetch(API_URL + "?action=api_cursos")
+                // ⚡ AQUÍ ESTÁ LA MAGIA ROMPE-CACHÉ: Le agregamos el milisegundo exacto al enlace
+                let enlaceFresco = API_URL + "?action=api_cursos&nocache=" + new Date().getTime();
+
+                fetch(enlaceFresco)
                     .then(response => response.json())
                     .then(data => {
-                        // AQUÍ VERIFICAMOS SI GOOGLE TE HIZO TRAMPA CON EL CACHÉ VIEJO
-                        if(data.version !== "v2_limpia") {
-                            mostrarAlerta("⚠️ ESTÁS USANDO UN ENLACE VIEJO DE GOOGLE.\n\nPor favor ve a Apps Script, haz clic en 'Implementar' > 'Administrar implementaciones' > Editar (Lápiz) > 'Nueva versión' > 'Implementar'. Luego copia el nuevo enlace y pégalo en tu código de GitHub.", "Error Crítico");
-                            btn.innerText = "Ingresar";
-                            btn.disabled = false;
-                            return;
-                        }
-
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
