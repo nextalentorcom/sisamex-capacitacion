@@ -119,7 +119,7 @@
             let pass = document.getElementById('input-sala-pass').value;
             if (pass === "Sisamex2026") { 
                 let btn = document.getElementById('btn-login');
-                btn.innerText = "Conectando con Servidor SISAMEX... ⏳";
+                btn.innerText = "Cargando ...";
                 btn.disabled = true;
 
                 // El "Rompedor de Caché" para traer siempre datos frescos
@@ -290,7 +290,7 @@
 
             let btnDiv = document.getElementById('btn-capturar-firma'); 
             let txtSpan = document.getElementById('txt-btn-enviar');
-            txtSpan.innerHTML = "⏳ Enviando..."; 
+            txtSpan.innerHTML = "Enviando..."; 
             btnDiv.style.pointerEvents = 'none';
             btnDiv.style.opacity = '0.5';
             
