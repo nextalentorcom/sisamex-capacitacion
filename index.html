@@ -158,9 +158,22 @@
             let cursosPlanC = datosPC.filter(c => c.fechaA === fechaHoyStr && c.instructor !== "Por asignar");
 
             cursosDeHoyLista = [];
-            cursosInduccion.forEach(c => cursosDeHoyLista.push({ tipo: "Inducción", idCurso: c.idCurso, curso: c.temaAgrupado, instructor: c.instructor, grupo: c.grupo, minutos: c.minutosAutorizados, horario: c.horaFiltro, fecha: c.fecha }));
-            cursosPlanC.forEach(c => cursosDeHoyLista.push({ tipo: "Plan Carrera", idCurso: c.idCurso, curso: c.curso, instructor: c.instructor, grupo: "N/A", minutos: c.minutosAutorizados, horario: c.horario, fecha: c.fechaA }));
-
+            cursosInduccion.forEach(c => cursosDeHoyLista.push({ 
+                tipo: "Inducción", 
+                idCurso: c.idCurso, 
+                curso: c.temaAgrupado, 
+                instructor: c.instructor, // <--- Este ahora mostrará el Oficial del Catálogo
+                instructorFirma: c.instructorFirma || c.instructor, // <--- La llave secreta para encontrar la fila en Excel
+                grupo: c.grupo, 
+                minutos: c.minutosAutorizados, 
+                horario: c.horaFiltro, 
+                fecha: c.fecha 
+            }));
+            cursosPlanC.forEach(c => cursosDeHoyLista.push({ 
+                tipo: "Plan Carrera", idCurso: c.idCurso, curso: c.curso, 
+                instructor: c.instructor, instructorFirma: c.instructor, 
+                grupo: "N/A", minutos: c.minutosAutorizados, horario: c.horario, fecha: c.fechaA 
+            }));
             let contenedor = document.getElementById('contenedor-cursos-hoy'); 
             contenedor.innerHTML = '';
             
@@ -306,9 +319,16 @@
             let nombreArchivoCorto = cursoAuditando.fecha.replace(/-/g, '') + "_" + cursoAuditando.instructor.split(" ")[0] + "_" + cursoAuditando.curso.substring(0, 10).replace(/\s/g, '');
             
             let paqueteAuditoria = { 
-                idCurso: cursoAuditando.idCurso, curso: cursoAuditando.curso, instructor: cursoAuditando.instructor, 
-                grupo: cursoAuditando.grupo, minutos: cursoAuditando.minutos, fecha: cursoAuditando.fecha, 
-                horaFin: horaFinTexto, imagenBase64: base64Firma, fotoBase64: base64Foto, nombreArchivo: nombreArchivoCorto 
+                idCurso: cursoAuditando.idCurso, 
+                curso: cursoAuditando.curso, 
+                instructor: cursoAuditando.instructorFirma, // <--- ESTE ES EL CAMBIO CLAVE
+                grupo: cursoAuditando.grupo, 
+                minutos: cursoAuditando.minutos, 
+                fecha: cursoAuditando.fecha, 
+                horaFin: horaFinTexto, 
+                imagenBase64: base64Firma, 
+                fotoBase64: base64Foto, 
+                nombreArchivo: nombreArchivoCorto 
             };
 
             fetch(API_URL, {
