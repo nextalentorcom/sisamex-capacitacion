@@ -27,7 +27,15 @@
 
     <div class="sala-dark" id="sala-login">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
-        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa la clave de acceso de Instructor.</p>
+        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona la Planta e ingresa la clave de Instructor.</p>
+        
+        <!-- ✅ NUEVO SELECTOR DE PLANTA EN SALA DE INSTRUCTOR -->
+        <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 10px;">
+            <option value="Componentes">🏢 Planta: Componentes / SMX3</option>
+            <option value="Ensamble">🏢 Planta: Ensamble</option>
+        </select>
+        <br>
+
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña">
         <br>
         <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
@@ -117,13 +125,15 @@
 
         function verificarPassInstructor() {
             let pass = document.getElementById('input-sala-pass').value;
+            let plantaSelec = document.getElementById('input-sala-planta').value; // ✅ LECTURA DEL FILTRO
+
             if (pass === "Sisamex2026") { 
                 let btn = document.getElementById('btn-login');
                 btn.innerText = "Cargando ...";
                 btn.disabled = true;
 
-                // El "Rompedor de Caché" para traer siempre datos frescos
-                let enlaceFresco = API_URL + "?action=api_cursos&nocache=" + new Date().getTime();
+                // ✅ SE MANDA EL PARÁMETRO DE PLANTA A LA BASE DE DATOS
+                let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
 
                 fetch(enlaceFresco)
                     .then(response => response.json())
@@ -162,8 +172,8 @@
                 tipo: "Inducción", 
                 idCurso: c.idCurso, 
                 curso: c.temaAgrupado, 
-                instructor: c.instructor, // <--- Este ahora mostrará el Oficial del Catálogo
-                instructorFirma: c.instructorFirma || c.instructor, // <--- La llave secreta para encontrar la fila en Excel
+                instructor: c.instructor,
+                instructorFirma: c.instructorFirma || c.instructor,
                 grupo: c.grupo, 
                 minutos: c.minutosAutorizados, 
                 horario: c.horaFiltro, 
@@ -321,7 +331,7 @@
             let paqueteAuditoria = { 
                 idCurso: cursoAuditando.idCurso, 
                 curso: cursoAuditando.curso, 
-                instructor: cursoAuditando.instructorFirma, // <--- ESTE ES EL CAMBIO CLAVE
+                instructor: cursoAuditando.instructorFirma, 
                 grupo: cursoAuditando.grupo, 
                 minutos: cursoAuditando.minutos, 
                 fecha: cursoAuditando.fecha, 
