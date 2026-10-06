@@ -29,7 +29,6 @@
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona la Planta e ingresa la clave de Instructor.</p>
         
-        <!-- ✅ NUEVO SELECTOR DE PLANTA EN SALA DE INSTRUCTOR -->
         <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 10px;">
             <option value="Componentes">🏢 Planta: Componentes / SMX3</option>
             <option value="Ensamble">🏢 Planta: Ensamble</option>
@@ -102,10 +101,7 @@
     </div>
 
     <script>
-        // =========================================================
-        // PEGA AQUÍ LA URL DE TU SCRIPT DE GOOGLE
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
-        // =========================================================
 
         let datosGlobales = [];
         let cursosDeHoyLista = []; 
@@ -125,34 +121,58 @@
 
         function verificarPassInstructor() {
             let pass = document.getElementById('input-sala-pass').value;
-            let plantaSelec = document.getElementById('input-sala-planta').value; // ✅ LECTURA DEL FILTRO
+            let plantaSelec = document.getElementById('input-sala-planta').value;
 
             if (pass === "Sisamex2026") { 
                 let btn = document.getElementById('btn-login');
-                btn.innerText = "Cargando ...";
+                btn.innerText = "Sincronizando con Excel...";
                 btn.disabled = true;
 
-                // ✅ SE MANDA EL PARÁMETRO DE PLANTA A LA BASE DE DATOS
-                let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
+                // INICIA EL SISTEMA DE REINTENTOS (Intento 1)
+                intentarCargarDatos(plantaSelec, 1);
+            } else { 
+                mostrarAlerta("La contraseña es incorrecta.", "Acceso Denegado"); 
+            }
+        }
 
-                fetch(enlaceFresco)
-                    .then(response => response.json())
-                    .then(data => {
+        // ✅ NUEVA LÓGICA DE REINTENTOS PARA EVITAR ERROR DE <!DOCTYPE
+        function intentarCargarDatos(plantaSelec, intento) {
+            let btn = document.getElementById('btn-login');
+            let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
+
+            if(intento > 1) {
+                btn.innerText = "Reintentando... (" + intento + "/3)";
+            }
+
+            fetch(enlaceFresco)
+                .then(response => response.text()) // Leemos primero como texto para validar si Google mandó HTML basura
+                .then(text => {
+                    try {
+                        let data = JSON.parse(text); // Intentamos convertir a JSON
+                        
+                        // Si funciona, cargamos los datos
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
                         document.getElementById('sala-login').style.display = 'none'; 
                         document.getElementById('sala-lista-cursos').style.display = 'flex'; 
                         cargarCursosDelDia(datosPC);
-                    })
-                    .catch(err => {
-                        mostrarAlerta("Error al conectar con la base de datos: " + err, "Error");
+                    } catch (e) {
+                        // Si truena al convertir a JSON, es el error de Google Timeout
+                        throw new Error("HTML devuelto en lugar de JSON");
+                    }
+                })
+                .catch(err => {
+                    if (intento < 3) {
+                        // Si falla, espera 3 segundos e intenta de nuevo
+                        setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
+                    } else {
+                        // Solo después de 3 intentos fallidos le avisamos al maestro
+                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo de Excel. Por favor, vuelve a dar clic en Ingresar.", "Aviso de Conexión");
                         btn.innerText = "Ingresar";
                         btn.disabled = false;
-                    });
-            } else { 
-                mostrarAlerta("La contraseña es incorrecta.", "Acceso Denegado"); 
-            }
+                    }
+                });
         }
 
         function cargarCursosDelDia(datosPC) {
