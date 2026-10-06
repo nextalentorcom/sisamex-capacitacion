@@ -125,7 +125,7 @@
 
             if (pass === "Sisamex2026") { 
                 let btn = document.getElementById('btn-login');
-                btn.innerText = "Sincronizando con Excel...";
+                btn.innerText = "Cargando...";
                 btn.disabled = true;
 
                 // INICIA EL SISTEMA DE REINTENTOS (Intento 1)
@@ -141,7 +141,7 @@
             let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
 
             if(intento > 1) {
-                btn.innerText = "Reintentando... (" + intento + "/3)";
+                btn.innerText = "Reintentando... (" + intento + "/2)";
             }
 
             fetch(enlaceFresco)
@@ -168,7 +168,7 @@
                         setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
                     } else {
                         // Solo después de 3 intentos fallidos le avisamos al maestro
-                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo de Excel. Por favor, vuelve a dar clic en Ingresar.", "Aviso de Conexión");
+                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a dar clic en Ingresar.", "Aviso de Conexión");
                         btn.innerText = "Ingresar";
                         btn.disabled = false;
                     }
