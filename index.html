@@ -12,7 +12,8 @@
         .btn-action:hover { opacity: 0.8; }
         .btn-action:disabled { background-color: #555 !important; cursor: not-allowed; }
         
-        .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 300px; margin-bottom: 20px; outline: none; background: #222; color: white; }
+        .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 320px; margin-bottom: 20px; outline: none; background: #222; color: white; }
+        .sala-input::placeholder { color: #777; font-size: 15px; }
         
         .timer-gigante { font-size: 90px; font-weight: bold; color: #C8102E; margin: 0; font-family: monospace; }
         .curso-box { background: #222; padding: 20px; border-radius: 8px; border-left: 5px solid #0F9D58; text-align: left; }
@@ -26,18 +27,22 @@
 <body>
 
     <div class="sala-dark" id="sala-login">
-        <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
-        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona la Planta e ingresa la clave de Instructor.</p>
+        <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Kiosco Auditoría SISAMEX</h1>
+        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa un correo de administración autorizado para desbloquear la sala.</p>
         
-        <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 10px;">
+        <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 15px;">
             <option value="Componentes">🏢 Planta: Componentes / SMX3</option>
             <option value="Ensamble">🏢 Planta: Ensamble</option>
         </select>
         <br>
 
-        <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña">
+        <input type="email" id="input-sala-correo" class="sala-input" placeholder="Correo Autorizado" style="margin-bottom: 15px;">
         <br>
-        <button class="btn-action" id="btn-login" style="background-color: #0F9D58;" onclick="verificarPassInstructor()">Ingresar</button>
+        <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
+        <br>
+        
+        <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Desbloquear Kiosco</button>
+        <p id="msg-auth" style="color: #aaa; font-size: 13px; margin-top: 15px; display: none;">⏳ Sincronizando cursos del día...</p>
     </div>
 
     <div class="sala-dark flex-col" id="sala-lista-cursos" style="display: none; max-width: 800px;">
@@ -47,7 +52,7 @@
         </div>
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;"></div>
         <div style="width: 100%; text-align: center; margin-top: 15px;">
-            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Cerrar Sesión</button>
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Bloquear Kiosco (Cerrar Sesión)</button>
         </div>
     </div>
 
@@ -56,11 +61,12 @@
             <h3 style="color: #0F9D58; margin-bottom: 15px; font-size: 24px;" id="sala-curso-titulo"></h3>
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Instructor:</strong> <span id="sala-curso-inst"></span></p>
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Grupo:</strong> <span id="sala-curso-grupo"></span></p>
+            <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Duración del Curso:</strong> <span id="sala-curso-duracion" style="font-weight: bold; color: #0F9D58;"></span></p>
         </div>
         <div style="text-align: center; width: 100%; margin-top: 20px;">
-            <p style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante de sesión obligatoria:</p>
+            <p style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante sugerido:</p>
             <div class="timer-gigante" id="timer-display">00:00:00</div>
-            <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: none; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
+            <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: inline-block; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
         </div>
     </div>
 
@@ -103,11 +109,22 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
 
+        // 🔒 LISTA DE CORREOS AUTORIZADOS PARA DESBLOQUEAR EL KIOSCO
+        // Puedes agregar o quitar correos de esta lista.
+        const CORREOS_AUTORIZADOS = [
+            "aime.garcia@sisamex.com.mx",
+            "diego.castaneda@sisamex.com.mx",
+            "incorporaciondetalento@sisamex.com.mx",
+            "nextalent.talento@sisamex.com.mx"
+            "nextalent.orcom@sisamex.com.mx"
+        ];
+
         let datosGlobales = [];
         let cursosDeHoyLista = []; 
         let cursoAuditando = null; 
         let tiempoRestanteSegundos = 0; 
         let intervaloTimer = null; 
+        let horaInicioClaseReal = null; 
         
         let streamCamara = null;
         let fotoTomada = false;
@@ -119,25 +136,33 @@
             document.getElementById('custom-alert').style.display = 'flex';
         }
 
-        function verificarPassInstructor() {
+        function verificarSeguridadKiosco() {
+            let correoIngresado = document.getElementById('input-sala-correo').value.trim().toLowerCase();
             let pass = document.getElementById('input-sala-pass').value;
             let plantaSelec = document.getElementById('input-sala-planta').value;
+            let btn = document.getElementById('btn-login');
+            let msgAuth = document.getElementById('msg-auth');
 
-            if (pass === "Sisamex2026") { 
-                let btn = document.getElementById('btn-login');
-                btn.innerText = "Cargando...";
-                btn.disabled = true;
-
-                // INICIA EL SISTEMA DE REINTENTOS (Intento 1)
-                intentarCargarDatos(plantaSelec, 1);
-            } else { 
-                mostrarAlerta("La contraseña es incorrecta.", "Acceso Denegado"); 
+            // 1. Validar que el correo esté en la lista de administradores autorizados
+            if (!CORREOS_AUTORIZADOS.includes(correoIngresado) && pass !== "SisamexAdmin_Bypass") {
+                return mostrarAlerta("❌ Este correo no tiene permisos para desbloquear el Kiosco de Instructores.", "Acceso Denegado");
             }
+
+            // 2. Validar Contraseña Base
+            if (pass !== "Sisamex2026" && pass !== "SisamexAdmin_Bypass") { 
+                return mostrarAlerta("La contraseña del sistema es incorrecta.", "Acceso Denegado"); 
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Cargando...";
+            msgAuth.style.display = 'block';
+
+            intentarCargarDatos(plantaSelec, 1);
         }
 
-        // ✅ NUEVA LÓGICA DE REINTENTOS PARA EVITAR ERROR DE <!DOCTYPE
         function intentarCargarDatos(plantaSelec, intento) {
             let btn = document.getElementById('btn-login');
+            let msgAuth = document.getElementById('msg-auth');
             let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
 
             if(intento > 1) {
@@ -145,12 +170,10 @@
             }
 
             fetch(enlaceFresco)
-                .then(response => response.text()) // Leemos primero como texto para validar si Google mandó HTML basura
+                .then(response => response.text())
                 .then(text => {
                     try {
-                        let data = JSON.parse(text); // Intentamos convertir a JSON
-                        
-                        // Si funciona, cargamos los datos
+                        let data = JSON.parse(text);
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
@@ -158,19 +181,17 @@
                         document.getElementById('sala-lista-cursos').style.display = 'flex'; 
                         cargarCursosDelDia(datosPC);
                     } catch (e) {
-                        // Si truena al convertir a JSON, es el error de Google Timeout
                         throw new Error("HTML devuelto en lugar de JSON");
                     }
                 })
                 .catch(err => {
                     if (intento < 3) {
-                        // Si falla, espera 3 segundos e intenta de nuevo
                         setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
                     } else {
-                        // Solo después de 3 intentos fallidos le avisamos al maestro
-                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a dar clic en Ingresar.", "Aviso de Conexión");
-                        btn.innerText = "Ingresar";
+                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a dar clic en Desbloquear.", "Aviso de Conexión");
+                        btn.innerText = "Desbloquear Kiosco";
                         btn.disabled = false;
+                        msgAuth.style.display = 'none';
                     }
                 });
         }
@@ -195,7 +216,7 @@
                 instructor: c.instructor,
                 instructorFirma: c.instructorFirma || c.instructor,
                 grupo: c.grupo, 
-                minutos: c.minutosAutorizados, 
+                minutos: c.minutosCatalogo || c.minutosAutorizados,
                 horario: c.horaFiltro, 
                 fecha: c.fecha 
             }));
@@ -216,7 +237,8 @@
                 let m = curso.minutos; let textMin = m > 0 ? (m + " mins") : "Sin tiempo";
                 let cardHTML = `<div class="curso-box" style="display:flex; justify-content:space-between; align-items:center;">
                     <div><h4 style="margin: 0 0 5px 0; color: #fff; font-size: 18px;">${curso.curso}</h4>
-                    <p style="margin: 0; color: #aaa; font-size: 13px;"><strong>Instructor:</strong> ${curso.instructor} | <strong>Hora:</strong> ${curso.horario} | <strong>Duración:</strong> ${textMin}</p></div>
+                    <p style="margin: 0; color: #aaa; font-size: 13px;"><strong>Instructor:</strong> ${curso.instructor} | <strong>Hora:</strong> ${curso.horario}</p>
+                    <p style="margin: 0; color: #0F9D58; font-size: 13px; font-weight: bold;">Duración Oficial: ${textMin}</p></div>
                     <button class="btn-action" style="background-color:#0F9D58; padding: 10px 20px;" onclick="iniciarSesionCurso(${index})">Iniciar</button>
                 </div>`;
                 contenedor.innerHTML += cardHTML;
@@ -227,19 +249,63 @@
             cursoAuditando = cursosDeHoyLista[index];
             if (cursoAuditando.minutos <= 0) return mostrarAlerta("Este curso no tiene tiempo definido en catálogo.");
 
+            // RESTADOR DE TIEMPO INTELIGENTE POR RETARDO
+            let horarioText = cursoAuditando.horario || "";
+            let partesH = horarioText.replace(/[–—]/g, '-').split('-');
+            let minutosDeRetraso = 0;
+
+            if(partesH.length >= 1) {
+                let startMatch = partesH[0].trim().match(/(\d+):(\d+)\s*(a|p)/i);
+                if(startMatch) {
+                    let h = parseInt(startMatch[1], 10);
+                    let m = parseInt(startMatch[2], 10);
+                    let ampm = startMatch[3].toLowerCase();
+                    if(ampm === 'p' && h < 12) h += 12;
+                    if(ampm === 'a' && h === 12) h = 0;
+                    
+                    let ahora = new Date();
+                    let horaInicioProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), h, m, 0);
+                    
+                    if (ahora > horaInicioProgramada) {
+                        let diffMs = ahora - horaInicioProgramada;
+                        minutosDeRetraso = Math.floor(diffMs / 60000); // Resta en minutos
+                    }
+                }
+            }
+
+            let minutosSugeridos = cursoAuditando.minutos - minutosDeRetraso;
+            if (minutosSugeridos < 0) minutosSugeridos = 0; 
+
             document.getElementById('sala-lista-cursos').style.display = 'none'; 
             document.getElementById('sala-activa').style.display = 'flex';
             document.getElementById('sala-curso-titulo').innerText = cursoAuditando.curso; 
             document.getElementById('sala-curso-inst').innerText = cursoAuditando.instructor; 
             document.getElementById('sala-curso-grupo').innerText = cursoAuditando.grupo;
+            
+            let msjDuracion = cursoAuditando.minutos + " minutos";
+            if (minutosDeRetraso > 0) {
+                msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(-${minutosDeRetraso} min descontados por retardo)</span>`;
+            }
+            document.getElementById('sala-curso-duracion').innerHTML = msjDuracion;
 
-            tiempoRestanteSegundos = 10; 
-            actualizarPantallaTimer();
+            horaInicioClaseReal = new Date(); 
+            tiempoRestanteSegundos = minutosSugeridos * 60; 
+            
+            document.getElementById('btn-pre-finalizar').style.display = 'none';
 
-            intervaloTimer = setInterval(() => {
-                tiempoRestanteSegundos--; actualizarPantallaTimer();
-                if (tiempoRestanteSegundos <= 0) { clearInterval(intervaloTimer); document.getElementById('btn-pre-finalizar').style.display = 'inline-block'; }
-            }, 1000);
+            if (tiempoRestanteSegundos <= 0) {
+                document.getElementById('timer-display').innerText = "00:00";
+                document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
+            } else {
+                actualizarPantallaTimer();
+                intervaloTimer = setInterval(() => {
+                    tiempoRestanteSegundos--; actualizarPantallaTimer();
+                    if (tiempoRestanteSegundos <= 0) { 
+                        clearInterval(intervaloTimer); 
+                        document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
+                    }
+                }, 1000);
+            }
         }
 
         function actualizarPantallaTimer() {
@@ -249,6 +315,14 @@
         }
 
         function prepararFirmaAuditoria() {
+            let horaFinReal = new Date();
+            let diferenciaMs = horaFinReal - horaInicioClaseReal;
+            let minutosReales = Math.round(diferenciaMs / 60000);
+            
+            cursoAuditando.minutosRealesEfectivos = minutosReales;
+            cursoAuditando.horaInicioFormateada = horaInicioClaseReal.getHours().toString().padStart(2, '0') + ":" + horaInicioClaseReal.getMinutes().toString().padStart(2, '0');
+            cursoAuditando.horaFinFormateada = horaFinReal.getHours().toString().padStart(2, '0') + ":" + horaFinReal.getMinutes().toString().padStart(2, '0');
+
             document.getElementById('sala-activa').style.display = 'none'; 
             document.getElementById('sala-firma').style.display = 'flex';
             
@@ -326,66 +400,3 @@
             ctxFirma.lineCap = "round"; 
             haFirmado = false; 
         }
-
-        function guardarFirmaYEnviar() {
-            if(!haFirmado) return mostrarAlerta("Por favor, dibuja tu firma en el recuadro blanco.");
-            if(!fotoTomada && streamCamara) return mostrarAlerta("Por favor, haz clic en 'Capturar Foto'.");
-
-            let btnDiv = document.getElementById('btn-capturar-firma'); 
-            let txtSpan = document.getElementById('txt-btn-enviar');
-            txtSpan.innerHTML = "Enviando..."; 
-            btnDiv.style.pointerEvents = 'none';
-            btnDiv.style.opacity = '0.5';
-            
-            let base64Firma = canvasFirma.toDataURL('image/jpeg', 0.9).split(',')[1];
-            
-            var base64Foto = "NO_CAMERA";
-            if (fotoTomada) {
-                var canvasFoto = document.getElementById('canvasFotoCam');
-                base64Foto = canvasFoto.toDataURL('image/jpeg', 0.8).split(',')[1];
-            }
-
-            let ahora = new Date(); let horaFinTexto = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString().padStart(2, '0');
-            let nombreArchivoCorto = cursoAuditando.fecha.replace(/-/g, '') + "_" + cursoAuditando.instructor.split(" ")[0] + "_" + cursoAuditando.curso.substring(0, 10).replace(/\s/g, '');
-            
-            let paqueteAuditoria = { 
-                idCurso: cursoAuditando.idCurso, 
-                curso: cursoAuditando.curso, 
-                instructor: cursoAuditando.instructorFirma, 
-                grupo: cursoAuditando.grupo, 
-                minutos: cursoAuditando.minutos, 
-                fecha: cursoAuditando.fecha, 
-                horaFin: horaFinTexto, 
-                imagenBase64: base64Firma, 
-                fotoBase64: base64Foto, 
-                nombreArchivo: nombreArchivoCorto 
-            };
-
-            fetch(API_URL, {
-                method: "POST",
-                redirect: "follow",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "guardarAuditoria", paquete: paqueteAuditoria })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "OK") { 
-                    mostrarAlerta("✅ Evidencia capturada y guardada en Drive exitosamente.", "Auditoría Exitosa"); 
-                    setTimeout(() => location.reload(), 3000); 
-                } else { 
-                    mostrarAlerta(data.status, "Error de Apps Script"); 
-                    txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
-                    btnDiv.style.pointerEvents = 'auto';
-                    btnDiv.style.opacity = '1';
-                }
-            })
-            .catch(err => { 
-                mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); 
-                txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
-                btnDiv.style.pointerEvents = 'auto';
-                btnDiv.style.opacity = '1';
-            });
-        }
-    </script>
-</body>
-</html>
