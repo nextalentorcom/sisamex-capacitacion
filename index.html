@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiosco Auditoría Instructor - SISAMEX</title>
+    <title>Auditoría Instructor - SISAMEX</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; padding: 20px 0;}
         .sala-dark { background-color: #1a1a1a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 95%; max-width: 900px; margin: auto; }
@@ -27,7 +27,7 @@
 <body>
 
     <div class="sala-dark" id="sala-login">
-        <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Kiosco Auditoría SISAMEX</h1>
+        <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa un correo de administración autorizado para desbloquear la sala.</p>
         
         <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 15px;">
@@ -43,8 +43,8 @@
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
         <br>
         
-        <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Desbloquear Kiosco</button>
-        <p id="msg-auth" style="color: #aaa; font-size: 13px; margin-top: 15px; display: none;">⏳ Sincronizando cursos del día...</p>
+        <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Aceptar</button>
+        <p id="msg-auth" style="color: #aaa; font-size: 13px; margin-top: 15px; display: none;">⏳ Cargando...</p>
     </div>
 
     <div class="sala-dark flex-col" id="sala-lista-cursos" style="display: none; max-width: 800px;">
@@ -54,7 +54,7 @@
         </div>
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;"></div>
         <div style="width: 100%; text-align: center; margin-top: 15px;">
-            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Bloquear Kiosco (Cerrar Sesión)</button>
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Cerrar Sesión</button>
         </div>
     </div>
 
@@ -157,11 +157,11 @@
 
             // 1. Validar que el correo esté en la lista de administradores autorizados
             if (!CORREOS_AUTORIZADOS.includes(correoIngresado) && pass !== "SisamexAdmin_Bypass") {
-                return mostrarAlerta("❌ Este correo no tiene permisos para desbloquear el Kiosco de Instructores.", "Acceso Denegado");
+                return mostrarAlerta("❌ Este correo no tiene permisos para desbloquear el listado de Instructores.", "Acceso Denegado");
             }
 
             // 2. Validar Contraseña Base
-            if (pass !== "Sisamex2026" && pass !== "SisamexAdmin_Bypass") { 
+            if (pass !== "Sisamex" && pass !== "SisamexAdmin_Bypass") { 
                 return mostrarAlerta("La contraseña del sistema es incorrecta.", "Acceso Denegado"); 
             }
 
@@ -201,7 +201,7 @@
                         setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
                     } else {
                         mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a dar clic en Desbloquear.", "Aviso de Conexión");
-                        btn.innerText = "Desbloquear Kiosco";
+                        btn.innerText = "Cerrar sesión";
                         btn.disabled = false;
                         msgAuth.style.display = 'none';
                     }
