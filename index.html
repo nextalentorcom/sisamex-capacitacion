@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría Instructor - SISAMEX</title>
+    <title>Kiosco Auditoría Instructor - SISAMEX</title>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #111; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow-x: hidden; padding: 20px 0;}
         .sala-dark { background-color: #1a1a1a; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); width: 95%; max-width: 900px; margin: auto; }
@@ -36,8 +36,10 @@
         </select>
         <br>
 
+        <!-- Esta es la caja de texto del correo (Crucial para que no choque) -->
         <input type="email" id="input-sala-correo" class="sala-input" placeholder="Correo Autorizado" style="margin-bottom: 15px;">
         <br>
+        
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
         <br>
         
@@ -110,7 +112,6 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
 
         // 🔒 LISTA DE CORREOS AUTORIZADOS PARA DESBLOQUEAR EL KIOSCO
-        // Puedes agregar o quitar correos de esta lista.
         const CORREOS_AUTORIZADOS = [
             "aime.garcia@sisamex.com.mx",
             "diego.castaneda@sisamex.com.mx",
@@ -137,11 +138,22 @@
         }
 
         function verificarSeguridadKiosco() {
-            let correoIngresado = document.getElementById('input-sala-correo').value.trim().toLowerCase();
-            let pass = document.getElementById('input-sala-pass').value;
+            let cajaCorreo = document.getElementById('input-sala-correo');
+            let cajaPass = document.getElementById('input-sala-pass');
+
+            if (!cajaCorreo || !cajaPass) {
+                return mostrarAlerta("❌ Error: Faltan campos en la pantalla. Asegúrate de haber copiado todo el HTML correcto.", "Error de Diseño");
+            }
+
+            let correoIngresado = cajaCorreo.value.trim().toLowerCase();
+            let pass = cajaPass.value;
             let plantaSelec = document.getElementById('input-sala-planta').value;
             let btn = document.getElementById('btn-login');
             let msgAuth = document.getElementById('msg-auth');
+
+            if (!correoIngresado) {
+                return mostrarAlerta("Por favor, ingresa tu correo corporativo autorizado.", "Dato Faltante");
+            }
 
             // 1. Validar que el correo esté en la lista de administradores autorizados
             if (!CORREOS_AUTORIZADOS.includes(correoIngresado) && pass !== "SisamexAdmin_Bypass") {
@@ -400,3 +412,75 @@
             ctxFirma.lineCap = "round"; 
             haFirmado = false; 
         }
+
+        function guardarFirmaYEnviar() {
+            if(!haFirmado) return mostrarAlerta("Por favor, dibuja tu firma en el recuadro blanco.");
+            if(!fotoTomada && streamCamara) return mostrarAlerta("Por favor, haz clic en 'Capturar Foto'.");
+
+            let btnDiv = document.getElementById('btn-capturar-firma'); 
+            let txtSpan = document.getElementById('txt-btn-enviar');
+            txtSpan.innerHTML = "Enviando..."; 
+            btnDiv.style.pointerEvents = 'none';
+            btnDiv.style.opacity = '0.5';
+            
+            let base64Firma = canvasFirma.toDataURL('image/jpeg', 0.9).split(',')[1];
+            
+            var base64Foto = "NO_CAMERA";
+            if (fotoTomada) {
+                var canvasFoto = document.getElementById('canvasFotoCam');
+                base64Foto = canvasFoto.toDataURL('image/jpeg', 0.8).split(',')[1];
+            }
+
+            let nombreArchivoCorto = cursoAuditando.fecha.replace(/-/g, '') + "_" + cursoAuditando.instructor.split(" ")[0] + "_" + cursoAuditando.curso.substring(0, 10).replace(/\s/g, '');
+            
+            let paqueteAuditoria = { 
+                idCurso: cursoAuditando.idCurso, 
+                curso: cursoAuditando.curso, 
+                instructor: cursoAuditando.instructorFirma, 
+                grupo: cursoAuditando.grupo, 
+                
+                horaInicioReal: cursoAuditando.horaInicioFormateada,
+                horaFinReal: cursoAuditando.horaFinFormateada,
+                minsClase: cursoAuditando.minutosRealesEfectivos,
+                minutosCatalogo: cursoAuditando.minutos,
+                
+                fecha: cursoAuditando.fecha, 
+                imagenBase64: base64Firma, 
+                fotoBase64: base64Foto, 
+                nombreArchivo: nombreArchivoCorto 
+            };
+
+            fetch(API_URL, {
+                method: "POST",
+                redirect: "follow",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ action: "guardarAuditoria", paquete: paqueteAuditoria })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "OK") { 
+                    mostrarAlerta("✅ Evidencia capturada y guardada en Drive exitosamente.", "Auditoría Exitosa"); 
+                    
+                    setTimeout(() => {
+                        document.getElementById('custom-alert').style.display = 'none';
+                        document.getElementById('sala-firma').style.display = 'none';
+                        document.getElementById('sala-lista-cursos').style.display = 'flex';
+                    }, 2500);
+
+                } else { 
+                    mostrarAlerta(data.status, "Error de Apps Script"); 
+                    txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
+                    btnDiv.style.pointerEvents = 'auto';
+                    btnDiv.style.opacity = '1';
+                }
+            })
+            .catch(err => { 
+                mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); 
+                txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
+                btnDiv.style.pointerEvents = 'auto';
+                btnDiv.style.opacity = '1';
+            });
+        }
+    </script>
+</body>
+</html>
