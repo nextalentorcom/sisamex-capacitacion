@@ -15,18 +15,41 @@
         .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 320px; margin-bottom: 20px; outline: none; background: #222; color: white; }
         .sala-input::placeholder { color: #777; font-size: 15px; }
         
-        .timer-gigante { font-size: 90px; font-weight: bold; color: #C8102E; margin: 0; font-family: monospace; }
+        .timer-gigante { font-size: 90px; font-weight: bold; color: #0F9D58; margin: 0; font-family: monospace; transition: color 0.3s; }
         .curso-box { background: #222; padding: 20px; border-radius: 8px; border-left: 5px solid #0F9D58; text-align: left; }
         
         #custom-alert { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; }
         .alert-box { background:white; padding:30px; border-radius:10px; max-width:450px; width: 90%; text-align:center; color: #111; }
         
         .flex-col { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+
+        /* Pantalla de Bloqueo */
+        #pantalla-bloqueo { position: fixed; top:0; left:0; width:100%; height:100%; background-color:#111; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+
+        /* Animación de Parpadeo Rojo para Alarma */
+        @keyframes parpadeoAlarma {
+            0% { background-color: #1a1a1a; }
+            50% { background-color: #4a0000; }
+            100% { background-color: #1a1a1a; }
+        }
+        .alarma-activa { animation: parpadeoAlarma 1.5s infinite; border: 2px solid #ff4d4d;}
     </style>
 </head>
 <body>
 
-    <div class="sala-dark" id="sala-login">
+    <!-- 🔒 1. PANTALLA DE BLOQUEO POR DISPOSITIVO (LLAVE DIGITAL) -->
+    <div id="pantalla-bloqueo">
+        <h1 style="font-size: 40px; color: #C8102E; margin-bottom: 10px;">⚠️ Acceso Denegado</h1>
+        <p style="font-size: 18px; color: #aaa; max-width: 600px; line-height: 1.5; margin-bottom: 30px;">
+            Este dispositivo no cuenta con la credencial de seguridad requerida.<br><br>
+            La Auditoría solo puede ejecutarse en la computadora oficial instalada físicamente dentro de la Sala Sociotec.
+        </p>
+        <input type="password" id="input-llave-maestra" class="sala-input" placeholder="Comando Admin de Vinculación" style="margin-bottom: 20px;">
+        <button class="btn-action" style="background-color: #333;" onclick="intentarVincularDispositivo()">Vincular Equipo</button>
+    </div>
+
+    <!-- 2. PANTALLA NORMAL DE LOGIN (Solo visible si tiene la llave) -->
+    <div class="sala-dark" id="sala-login" style="display: none;">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa un correo de administración autorizado para desbloquear la sala.</p>
         
@@ -35,11 +58,8 @@
             <option value="Ensamble">🏢 Planta: Ensamble</option>
         </select>
         <br>
-
-        <!-- Esta es la caja de texto del correo (Crucial para que no choque) -->
         <input type="email" id="input-sala-correo" class="sala-input" placeholder="Correo Autorizado" style="margin-bottom: 15px;">
         <br>
-        
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
         <br>
         
@@ -58,7 +78,7 @@
         </div>
     </div>
 
-    <div class="sala-dark flex-col" id="sala-activa" style="display: none; max-width: 700px;">
+    <div class="sala-dark flex-col" id="sala-activa" style="display: none; max-width: 700px; transition: all 0.5s;">
         <div class="curso-box" style="width: 100%;">
             <h3 style="color: #0F9D58; margin-bottom: 15px; font-size: 24px;" id="sala-curso-titulo"></h3>
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Instructor:</strong> <span id="sala-curso-inst"></span></p>
@@ -66,8 +86,12 @@
             <p style="margin: 8px 0; color: #ddd; font-size: 16px;"><strong>Duración del Curso:</strong> <span id="sala-curso-duracion" style="font-weight: bold; color: #0F9D58;"></span></p>
         </div>
         <div style="text-align: center; width: 100%; margin-top: 20px;">
-            <p style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante sugerido:</p>
+            <p id="txt-timer-instruccion" style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante sugerido:</p>
             <div class="timer-gigante" id="timer-display">00:00:00</div>
+            
+            <!-- Sonido Oculto -->
+            <audio id="audioAlarma" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
             <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: inline-block; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
         </div>
     </div>
@@ -111,7 +135,6 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
 
-        // 🔒 LISTA DE CORREOS AUTORIZADOS PARA DESBLOQUEAR EL KIOSCO
         const CORREOS_AUTORIZADOS = [
             "aime.garcia@sisamex.com.mx",
             "diego.castaneda@sisamex.com.mx",
@@ -131,6 +154,31 @@
         let fotoTomada = false;
         let canvasFirma, ctxFirma, dibujando = false, haFirmado = false;
 
+        // ==========================================
+        // 🔒 SISTEMA DE LLAVE DIGITAL (Dispositivo Físico)
+        // ==========================================
+        window.onload = function() {
+            let llaveGuardada = localStorage.getItem("SISAMEX_KEY");
+            if (llaveGuardada === "AUTORIZADO_SOCIOTEC") {
+                // El equipo ya está validado, quitamos pantalla roja
+                document.getElementById('pantalla-bloqueo').style.display = 'none';
+                document.getElementById('sala-login').style.display = 'block';
+            }
+        };
+
+        function intentarVincularDispositivo() {
+            let comando = document.getElementById('input-llave-maestra').value.trim();
+            // Este es el COMANDO SECRETO que solo tú sabes. Lo tecleas la primera vez en la PC de la sala.
+            if (comando === "SISAMEX_VINCULAR_SALA") {
+                localStorage.setItem("SISAMEX_KEY", "AUTORIZADO_SOCIOTEC");
+                document.getElementById('pantalla-bloqueo').style.display = 'none';
+                document.getElementById('sala-login').style.display = 'block';
+            } else {
+                alert("Comando incorrecto.");
+            }
+        }
+        // ==========================================
+
         function mostrarAlerta(mensaje, titulo = "SISAMEX") {
             document.getElementById('custom-alert-title').innerText = titulo;
             document.getElementById('custom-alert-msg').innerText = mensaje;
@@ -140,10 +188,6 @@
         function verificarSeguridadKiosco() {
             let cajaCorreo = document.getElementById('input-sala-correo');
             let cajaPass = document.getElementById('input-sala-pass');
-
-            if (!cajaCorreo || !cajaPass) {
-                return mostrarAlerta("❌ Error: Faltan campos en la pantalla. Asegúrate de haber copiado todo el HTML correcto.", "Error de Diseño");
-            }
 
             let correoIngresado = cajaCorreo.value.trim().toLowerCase();
             let pass = cajaPass.value;
@@ -155,12 +199,10 @@
                 return mostrarAlerta("Por favor, ingresa tu correo corporativo autorizado.", "Dato Faltante");
             }
 
-            // 1. Validar que el correo esté en la lista de administradores autorizados
             if (!CORREOS_AUTORIZADOS.includes(correoIngresado) && pass !== "SisamexAdmin_Bypass") {
                 return mostrarAlerta("❌ Este correo no tiene permisos para desbloquear el listado de Instructores.", "Acceso Denegado");
             }
 
-            // 2. Validar Contraseña Base
             if (pass !== "Sisamex" && pass !== "SisamexAdmin_Bypass") { 
                 return mostrarAlerta("La contraseña del sistema es incorrecta.", "Acceso Denegado"); 
             }
@@ -261,7 +303,6 @@
             cursoAuditando = cursosDeHoyLista[index];
             if (cursoAuditando.minutos <= 0) return mostrarAlerta("Este curso no tiene tiempo definido en catálogo.");
 
-            // RESTADOR DE TIEMPO INTELIGENTE POR RETARDO
             let horarioText = cursoAuditando.horario || "";
             let partesH = horarioText.replace(/[–—]/g, '-').split('-');
             let minutosDeRetraso = 0;
@@ -280,7 +321,7 @@
                     
                     if (ahora > horaInicioProgramada) {
                         let diffMs = ahora - horaInicioProgramada;
-                        minutosDeRetraso = Math.floor(diffMs / 60000); // Resta en minutos
+                        minutosDeRetraso = Math.floor(diffMs / 60000); 
                     }
                 }
             }
@@ -303,22 +344,52 @@
             horaInicioClaseReal = new Date(); 
             tiempoRestanteSegundos = minutosSugeridos * 60; 
             
+            // Restablecer estilos en caso de que se hayan activado antes
             document.getElementById('btn-pre-finalizar').style.display = 'none';
+            document.getElementById('timer-display').style.color = '#0F9D58';
+            document.getElementById('sala-activa').classList.remove('alarma-activa');
+            document.getElementById('txt-timer-instruccion').innerText = "Tiempo restante sugerido:";
 
             if (tiempoRestanteSegundos <= 0) {
-                document.getElementById('timer-display').innerText = "00:00";
-                document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
+                activarAlarmaVisualYSonora();
             } else {
                 actualizarPantallaTimer();
                 intervaloTimer = setInterval(() => {
-                    tiempoRestanteSegundos--; actualizarPantallaTimer();
+                    tiempoRestanteSegundos--; 
+                    actualizarPantallaTimer();
+                    
                     if (tiempoRestanteSegundos <= 0) { 
                         clearInterval(intervaloTimer); 
-                        document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
+                        activarAlarmaVisualYSonora();
                     }
                 }, 1000);
             }
         }
+
+        // ==========================================
+        // 🔔 SISTEMA DE ALARMA VISUAL Y SONORA
+        // ==========================================
+        function activarAlarmaVisualYSonora() {
+            document.getElementById('timer-display').innerText = "00:00:00";
+            document.getElementById('timer-display').style.color = '#ff4d4d'; // Rojo alerta
+            document.getElementById('txt-timer-instruccion').innerText = "TIEMPO FINALIZADO ⚠️";
+            document.getElementById('txt-timer-instruccion').style.color = '#ff4d4d';
+            document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
+            
+            // Efecto visual de parpadeo
+            document.getElementById('sala-activa').classList.add('alarma-activa');
+            
+            // Efecto de sonido (Se requiere iteracción previa del usuario para que el navegador lo permita)
+            try {
+                let audio = document.getElementById('audioAlarma');
+                audio.play();
+                // Detener el sonido después de 4 segundos
+                setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 4000);
+            } catch(e) {
+                console.log("El navegador bloqueó el autoplay del sonido.");
+            }
+        }
+        // ==========================================
 
         function actualizarPantallaTimer() {
             if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
@@ -327,6 +398,10 @@
         }
 
         function prepararFirmaAuditoria() {
+            // Detener alarma y sonido si siguen activos
+            document.getElementById('sala-activa').classList.remove('alarma-activa');
+            try { document.getElementById('audioAlarma').pause(); } catch(e){}
+
             let horaFinReal = new Date();
             let diferenciaMs = horaFinReal - horaInicioClaseReal;
             let minutosReales = Math.round(diferenciaMs / 60000);
@@ -465,6 +540,10 @@
                         document.getElementById('custom-alert').style.display = 'none';
                         document.getElementById('sala-firma').style.display = 'none';
                         document.getElementById('sala-lista-cursos').style.display = 'flex';
+                        // Detener la cámara
+                        if (streamCamara) {
+                            streamCamara.getTracks().forEach(track => track.stop());
+                        }
                     }, 2500);
 
                 } else { 
@@ -483,5 +562,4 @@
         }
     </script>
 </body>
-    
 </html>
