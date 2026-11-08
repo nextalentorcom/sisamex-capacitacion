@@ -42,28 +42,27 @@
         <h1 style="font-size: 40px; color: #C8102E; margin-bottom: 10px;">⚠️ Acceso Denegado</h1>
         <p style="font-size: 18px; color: #aaa; max-width: 600px; line-height: 1.5; margin-bottom: 30px;">
             Este dispositivo no cuenta con la credencial de seguridad requerida.<br><br>
-            La Auditoría solo puede ejecutarse en la computadora oficial instalada físicamente dentro de la Sala Sociotec.
+            La Auditoría solo puede ejecutarse en la computadora oficial.
         </p>
         <input type="password" id="input-llave-maestra" class="sala-input" placeholder="Comando Admin de Vinculación" style="margin-bottom: 20px;">
         <button class="btn-action" style="background-color: #333;" onclick="intentarVincularDispositivo()">Vincular Equipo</button>
     </div>
 
-    <!-- 2. PANTALLA NORMAL DE LOGIN (Solo visible si tiene la llave) -->
+    <!-- 2. PANTALLA NORMAL DE LOGIN (Solo Contraseña) -->
     <div class="sala-dark" id="sala-login" style="display: none;">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
-        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Ingresa un correo de administración autorizado para desbloquear la sala.</p>
+        <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona tu planta e ingresa la contraseña de la sala.</p>
         
         <select id="input-sala-planta" class="sala-input" style="font-weight: bold; border-color: #0F9D58; margin-bottom: 15px;">
             <option value="Componentes">🏢 Planta: Componentes / SMX3</option>
             <option value="Ensamble">🏢 Planta: Ensamble</option>
         </select>
         <br>
-        <input type="email" id="input-sala-correo" class="sala-input" placeholder="Correo Autorizado" style="margin-bottom: 15px;">
-        <br>
+        
         <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
         <br>
         
-        <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Aceptar</button>
+        <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Ingresar</button>
         <p id="msg-auth" style="color: #aaa; font-size: 13px; margin-top: 15px; display: none;">⏳ Cargando...</p>
     </div>
 
@@ -74,7 +73,7 @@
         </div>
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;"></div>
         <div style="width: 100%; text-align: center; margin-top: 15px;">
-            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Cerrar Sesión</button>
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Regresar al Inicio</button>
         </div>
     </div>
 
@@ -135,14 +134,6 @@
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
 
-        const CORREOS_AUTORIZADOS = [
-            "aime.garcia@sisamex.com.mx",
-            "diego.castaneda@sisamex.com.mx",
-            "incorporaciondetalento@sisamex.com.mx",
-            "nextalent.talento@sisamex.com.mx",
-            "nextalent.orcom@sisamex.com.mx"
-        ];
-
         let datosGlobales = [];
         let cursosDeHoyLista = []; 
         let cursoAuditando = null; 
@@ -160,7 +151,7 @@
         window.onload = function() {
             let llaveGuardada = localStorage.getItem("SISAMEX_KEY");
             if (llaveGuardada === "AUTORIZADO_SOCIOTEC") {
-                // El equipo ya está validado, quitamos pantalla roja
+                // El equipo ya está validado, quitamos pantalla roja y mostramos login
                 document.getElementById('pantalla-bloqueo').style.display = 'none';
                 document.getElementById('sala-login').style.display = 'block';
             }
@@ -168,9 +159,9 @@
 
         function intentarVincularDispositivo() {
             let comando = document.getElementById('input-llave-maestra').value.trim();
-            // Este es el COMANDO SECRETO que solo tú sabes. Lo tecleas la primera vez en la PC de la sala.
+            // Este es el COMANDO SECRETO que debes ingresar para autorizar una PC nueva
             if (comando === "SISAMEX_VINCULAR_SALA") {
-                localStorage.setItem("SISAMEX_KEY", "AUTORIZADO_SOCIOTEC");
+                localStorage.setItem("SISAMEX_KIOSCO_KEY", "AUTORIZADO_SOCIOTEC");
                 document.getElementById('pantalla-bloqueo').style.display = 'none';
                 document.getElementById('sala-login').style.display = 'block';
             } else {
@@ -186,25 +177,18 @@
         }
 
         function verificarSeguridadKiosco() {
-            let cajaCorreo = document.getElementById('input-sala-correo');
             let cajaPass = document.getElementById('input-sala-pass');
-
-            let correoIngresado = cajaCorreo.value.trim().toLowerCase();
             let pass = cajaPass.value;
             let plantaSelec = document.getElementById('input-sala-planta').value;
             let btn = document.getElementById('btn-login');
             let msgAuth = document.getElementById('msg-auth');
 
-            if (!correoIngresado) {
-                return mostrarAlerta("Por favor, ingresa tu correo corporativo autorizado.", "Dato Faltante");
-            }
-
-            if (!CORREOS_AUTORIZADOS.includes(correoIngresado) && pass !== "SisamexAdmin_Bypass") {
-                return mostrarAlerta("❌ Este correo no tiene permisos para desbloquear el listado de Instructores.", "Acceso Denegado");
+            if (!pass) {
+                return mostrarAlerta("Por favor, ingresa la contraseña.", "Dato Faltante");
             }
 
             if (pass !== "Sisamex" && pass !== "SisamexAdmin_Bypass") { 
-                return mostrarAlerta("La contraseña del sistema es incorrecta.", "Acceso Denegado"); 
+                return mostrarAlerta("La contraseña ingresada es incorrecta.", "Acceso Denegado"); 
             }
 
             btn.disabled = true;
@@ -235,15 +219,15 @@
                         document.getElementById('sala-lista-cursos').style.display = 'flex'; 
                         cargarCursosDelDia(datosPC);
                     } catch (e) {
-                        throw new Error("HTML devuelto en lugar de JSON");
+                        throw new Error("Error en el formato de datos devuelto por el servidor.");
                     }
                 })
                 .catch(err => {
                     if (intento < 3) {
                         setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
                     } else {
-                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a dar clic en Desbloquear.", "Aviso de Conexión");
-                        btn.innerText = "Cerrar sesión";
+                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a intentar.", "Aviso de Conexión");
+                        btn.innerText = "Ingresar";
                         btn.disabled = false;
                         msgAuth.style.display = 'none';
                     }
@@ -372,7 +356,7 @@
         function activarAlarmaVisualYSonora() {
             document.getElementById('timer-display').innerText = "00:00:00";
             document.getElementById('timer-display').style.color = '#ff4d4d'; // Rojo alerta
-            document.getElementById('txt-timer-instruccion').innerText = "TIEMPO FINALIZADO ⚠️";
+            document.getElementById('txt-timer-instruccion').innerText = "⚠️ TIEMPO FINALIZADO ⚠️";
             document.getElementById('txt-timer-instruccion').style.color = '#ff4d4d';
             document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
             
