@@ -107,6 +107,7 @@
             <p id="txt-timer-instruccion" style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante sugerido:</p>
             <div class="timer-gigante" id="timer-display">00:00:00</div>
             
+            <!-- Sonido de alarma optimizado para navegadores modernos -->
             <audio id="audioAlarma" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
             <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: inline-block; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
@@ -155,7 +156,9 @@
         let datosGlobales = [];
         let cursosDeHoyLista = []; 
         let cursoAuditando = null; 
+        
         let tiempoRestanteSegundos = 0; 
+        let targetTimeMs = 0; // V101: Reloj maestro absoluto
         let intervaloTimer = null; 
         let horaInicioClaseReal = null; 
         
@@ -230,34 +233,60 @@
         }
 
         function mostrarAlerta(mensaje, titulo = "SISAMEX") {
-            document.getElementById('custom-alert-title').innerText = titulo;
-            document.getElementById('custom-alert-msg').innerText = mensaje;
-            document.getElementById('custom-alert').style.display = 'flex';
+            let tituloEl = document.getElementById('custom-alert-title');
+            let msgEl = document.getElementById('custom-alert-msg');
+            let alertBox = document.getElementById('custom-alert');
+            
+            if (tituloEl && msgEl && alertBox) {
+                tituloEl.innerText = titulo;
+                msgEl.innerText = mensaje;
+                alertBox.style.display = 'flex';
+            } else {
+                alert(titulo + ": " + mensaje);
+            }
         }
 
-        // Permite presionar Enter en el teclado para iniciar sesión
         document.getElementById('input-sala-pass').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 verificarSeguridadKiosco();
             }
         });
 
         function verificarSeguridadKiosco() {
-            // Se agregó .trim() para borrar espacios accidentales
-            let pass = document.getElementById('input-sala-pass').value.trim();
-            let plantaSelec = document.getElementById('input-sala-planta').value;
-            let btn = document.getElementById('btn-login');
-            let msgAuth = document.getElementById('msg-auth');
+            try {
+                let inputPassObj = document.getElementById('input-sala-pass');
+                let pass = inputPassObj ? inputPassObj.value.trim() : "";
+                
+                let inputPlantaObj = document.getElementById('input-sala-planta');
+                let plantaSelec = inputPlantaObj ? inputPlantaObj.value : "Componentes";
+                
+                let btn = document.getElementById('btn-login');
+                let msgAuth = document.getElementById('msg-auth');
 
-            if (!pass) return mostrarAlerta("Por favor, ingresa la contraseña.", "Dato Faltante");
-            
-            // Ya no distingue mayúsculas o minúsculas
-            if (pass.toLowerCase() !== "sisamex" && pass !== "SisamexAdmin_Bypass") {
-                return mostrarAlerta("La contraseña ingresada es incorrecta.", "Acceso Denegado"); 
+                if (!pass) {
+                    mostrarAlerta("Por favor, ingresa la contraseña.", "Dato Faltante");
+                    return;
+                }
+                
+                if (pass.toLowerCase() !== "sisamex" && pass !== "SisamexAdmin_Bypass") {
+                    mostrarAlerta("La contraseña ingresada es incorrecta.", "Acceso Denegado");
+                    return;
+                }
+
+                if (btn) {
+                    btn.disabled = true; 
+                    btn.innerText = "Cargando..."; 
+                }
+                if (msgAuth) {
+                    msgAuth.style.display = 'block';
+                }
+
+                intentarCargarDatosKiosco(plantaSelec, 1);
+                
+            } catch (error) {
+                alert("Error local de ejecución: " + error.message);
             }
-
-            btn.disabled = true; btn.innerText = "Cargando..."; msgAuth.style.display = 'block';
-            intentarCargarDatosKiosco(plantaSelec, 1);
         }
 
         function intentarCargarDatosKiosco(plantaSelec, intento) {
@@ -265,7 +294,7 @@
             let msgAuth = document.getElementById('msg-auth');
             let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
 
-            if(intento > 1) btn.innerText = "Reintentando... (" + intento + "/2)";
+            if(intento > 1 && btn) btn.innerText = "Reintentando... (" + intento + "/2)";
 
             fetch(enlaceFresco)
                 .then(response => response.text())
@@ -275,19 +304,27 @@
                         datosGlobales = data.registros || [];
                         let datosPC = data.planCarreraRegistros || [];
                         
-                        document.getElementById('sala-login').style.display = 'none'; 
-                        document.getElementById('sala-lista-cursos').style.display = 'flex'; 
+                        let salaLogin = document.getElementById('sala-login');
+                        let salaLista = document.getElementById('sala-lista-cursos');
+                        
+                        if (salaLogin) salaLogin.style.display = 'none'; 
+                        if (salaLista) salaLista.style.display = 'flex'; 
+                        
                         cargarCursosDelDia(datosPC);
                     } catch (e) {
-                        throw new Error("Error en el formato devuelto por el servidor.");
+                        throw new Error("El archivo de Google devolvió información incorrecta.");
                     }
                 })
                 .catch(err => {
                     if (intento < 3) {
                         setTimeout(() => intentarCargarDatosKiosco(plantaSelec, intento + 1), 3000);
                     } else {
-                        mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a intentar.", "Aviso de Conexión");
-                        btn.innerText = "Ingresar"; btn.disabled = false; msgAuth.style.display = 'none';
+                        mostrarAlerta("Google está tardando en procesar. Por favor, intenta de nuevo.", "Aviso de Conexión");
+                        if (btn) {
+                            btn.innerText = "Ingresar"; 
+                            btn.disabled = false; 
+                        }
+                        if (msgAuth) msgAuth.style.display = 'none';
                     }
                 });
         }
@@ -321,26 +358,46 @@
             });
         }
 
+        // V101: CRONÓMETRO ABSOLUTO (INMUNE A PESTAÑAS INACTIVAS)
         function iniciarSesionCurso(index) {
             cursoAuditando = cursosDeHoyLista[index];
             if (cursoAuditando.minutos <= 0) return mostrarAlerta("Este curso no tiene tiempo definido en catálogo.");
 
             let horarioText = cursoAuditando.horario || "";
             let partesH = horarioText.replace(/[–—]/g, '-').split('-');
+            
             let minutosDeRetraso = 0;
+            let cursoYaTermino = false;
 
-            if(partesH.length >= 1) {
+            if(partesH.length >= 2) {
                 let startMatch = partesH[0].trim().match(/(\d+):(\d+)\s*(a|p)/i);
-                if(startMatch) {
-                    let h = parseInt(startMatch[1], 10); let m = parseInt(startMatch[2], 10); let ampm = startMatch[3].toLowerCase();
-                    if(ampm === 'p' && h < 12) h += 12; if(ampm === 'a' && h === 12) h = 0;
-                    let ahora = new Date(); let horaInicioProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), h, m, 0);
-                    if (ahora > horaInicioProgramada) { let diffMs = ahora - horaInicioProgramada; minutosDeRetraso = Math.floor(diffMs / 60000); }
+                let endMatch = partesH[1].trim().match(/(\d+):(\d+)\s*(a|p)/i);
+                
+                if(startMatch && endMatch) {
+                    let hIni = parseInt(startMatch[1], 10); let mIni = parseInt(startMatch[2], 10); let ampmIni = startMatch[3].toLowerCase();
+                    if(ampmIni === 'p' && hIni < 12) hIni += 12; if(ampmIni === 'a' && hIni === 12) hIni = 0;
+                    
+                    let hFin = parseInt(endMatch[1], 10); let mFin = parseInt(endMatch[2], 10); let ampmFin = endMatch[3].toLowerCase();
+                    if(ampmFin === 'p' && hFin < 12) hFin += 12; if(ampmFin === 'a' && hFin === 12) hFin = 0;
+                    
+                    let ahora = new Date(); 
+                    let horaInicioProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), hIni, mIni, 0);
+                    let horaFinProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), hFin, mFin, 0);
+                    
+                    if (ahora >= horaFinProgramada) {
+                        cursoYaTermino = true;
+                    } else if (ahora > horaInicioProgramada) { 
+                        let diffMs = ahora - horaInicioProgramada; 
+                        minutosDeRetraso = Math.floor(diffMs / 60000); 
+                    }
                 }
             }
 
             let minutosSugeridos = cursoAuditando.minutos - minutosDeRetraso;
-            if (minutosSugeridos < 0) minutosSugeridos = 0; 
+            
+            if (cursoYaTermino || minutosSugeridos < 0) {
+                minutosSugeridos = 0;
+            }
 
             document.getElementById('sala-lista-cursos').style.display = 'none'; 
             document.getElementById('btn-admin-desvincular').style.display = 'none';
@@ -350,22 +407,44 @@
             document.getElementById('sala-curso-grupo').innerText = cursoAuditando.grupo;
             
             let msjDuracion = cursoAuditando.minutos + " minutos";
-            if (minutosDeRetraso > 0) { msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(-${minutosDeRetraso} min descontados por retardo)</span>`; }
+            if (cursoYaTermino) {
+                msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(El curso ya finalizó oficialmente)</span>`;
+            } else if (minutosDeRetraso > 0) { 
+                msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(-${minutosDeRetraso} min descontados por retardo)</span>`; 
+            }
             document.getElementById('sala-curso-duracion').innerHTML = msjDuracion;
 
+            // Fijar la hora inicial y calcular la hora absoluta de finalización en Milisegundos
             horaInicioClaseReal = new Date(); 
-            tiempoRestanteSegundos = minutosSugeridos * 60; 
+            targetTimeMs = horaInicioClaseReal.getTime() + (minutosSugeridos * 60000);
             
             document.getElementById('btn-pre-finalizar').style.display = 'none';
             document.getElementById('timer-display').style.color = '#0F9D58';
             document.getElementById('sala-activa').classList.remove('alarma-activa');
             document.getElementById('txt-timer-instruccion').innerText = "Tiempo restante sugerido:";
 
-            if (tiempoRestanteSegundos <= 0) { activarAlarmaVisualYSonora(); } else {
+            if (minutosSugeridos <= 0) { 
+                tiempoRestanteSegundos = 0;
+                activarAlarmaVisualYSonora(); 
+            } else {
+                // Cálculo inicial rápido
+                let ahoraMs = new Date().getTime();
+                tiempoRestanteSegundos = Math.ceil((targetTimeMs - ahoraMs) / 1000);
                 actualizarPantallaTimer();
+
+                // Bucle de lectura de reloj (No importa si se duerme, siempre leerá el reloj mundial al despertar)
                 intervaloTimer = setInterval(() => {
-                    tiempoRestanteSegundos--; actualizarPantallaTimer();
-                    if (tiempoRestanteSegundos <= 0) { clearInterval(intervaloTimer); activarAlarmaVisualYSonora(); }
+                    let relojActualMs = new Date().getTime();
+                    tiempoRestanteSegundos = Math.ceil((targetTimeMs - relojActualMs) / 1000);
+                    
+                    if (tiempoRestanteSegundos <= 0) { 
+                        tiempoRestanteSegundos = 0;
+                        clearInterval(intervaloTimer); 
+                        actualizarPantallaTimer();
+                        activarAlarmaVisualYSonora(); 
+                    } else {
+                        actualizarPantallaTimer();
+                    }
                 }, 1000);
             }
         }
@@ -379,9 +458,15 @@
             document.getElementById('sala-activa').classList.add('alarma-activa');
             
             try {
-                let audio = document.getElementById('audioAlarma'); audio.play();
-                setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 4000);
-            } catch(e) { console.log("El navegador bloqueó el autoplay del sonido."); }
+                let audio = document.getElementById('audioAlarma'); 
+                // Se reinicia por si quedó a medias
+                audio.currentTime = 0; 
+                audio.play().then(() => {
+                    setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 4000);
+                }).catch(e => {
+                    console.log("El navegador requiere que el usuario haga clic en la pantalla antes de permitir sonido.");
+                });
+            } catch(e) { }
         }
 
         function actualizarPantallaTimer() {
