@@ -23,10 +23,8 @@
         
         .flex-col { display: flex; flex-direction: column; gap: 20px; align-items: center; }
 
-        /* Pantalla de Bloqueo */
         #pantalla-bloqueo { position: fixed; top:0; left:0; width:100%; height:100%; background-color:#111; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
 
-        /* Animación de Parpadeo Rojo para Alarma */
         @keyframes parpadeoAlarma {
             0% { background-color: #1a1a1a; }
             50% { background-color: #4a0000; }
@@ -37,7 +35,6 @@
 </head>
 <body>
 
-    <!-- 🔒 1. PANTALLA DE BLOQUEO POR DISPOSITIVO (LLAVE DIGITAL) -->
     <div id="pantalla-bloqueo">
         <h1 style="font-size: 40px; color: #C8102E; margin-bottom: 10px;">⚠️ Acceso Denegado</h1>
         <p style="font-size: 18px; color: #aaa; max-width: 600px; line-height: 1.5; margin-bottom: 30px;">
@@ -48,7 +45,6 @@
         <button class="btn-action" style="background-color: #333;" onclick="intentarVincularDispositivo()">Vincular Equipo</button>
     </div>
 
-    <!-- 2. PANTALLA NORMAL DE LOGIN -->
     <div class="sala-dark" id="sala-login" style="display: none;">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona tu planta e ingresa la contraseña de la sala.</p>
@@ -59,7 +55,6 @@
         </select>
         <br>
         
-        <!-- V94: Contenedor con Ojito para la Contraseña -->
         <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 25px auto;">
             <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 0; padding-right: 45px;">
             <span id="ojo-pass" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; top: 15px; cursor: pointer; font-size: 20px; user-select: none;" title="Mostrar/Ocultar Contraseña">👁️</span>
@@ -76,8 +71,7 @@
         </div>
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;"></div>
         <div style="width: 100%; text-align: center; margin-top: 15px;">
-            <!-- V94: Se cambió location.reload() por una función de cierre suave -->
-            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="cerrarSesionKiosco()">Regresar al Inicio</button>
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="cerrarSesionKiosco()">Cerrar Sesión</button>
         </div>
     </div>
 
@@ -92,7 +86,6 @@
             <p id="txt-timer-instruccion" style="font-size: 20px; color: #aaa; margin-bottom: 10px;">Tiempo restante sugerido:</p>
             <div class="timer-gigante" id="timer-display">00:00:00</div>
             
-            <!-- Sonido Oculto -->
             <audio id="audioAlarma" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
             <button class="btn-action" id="btn-pre-finalizar" style="background-color: #C8102E; font-size: 20px; padding: 15px 40px; display: inline-block; margin-top: 20px; width: 100%;" onclick="prepararFirmaAuditoria()">Terminar Curso y Firmar</button>
@@ -129,13 +122,14 @@
 
     <div id="custom-alert">
         <div class="alert-box">
-            <h3 id="custom-alert-title" style="margin-top:0; font-size: 22px;">Mensaje</h3>
-            <p id="custom-alert-msg" style="font-size:16px; margin: 15px 0;"></p>
+            <h3 id="custom-alert-title" style="margin-top:0; font-size: 22px; color: #111;">Mensaje</h3>
+            <p id="custom-alert-msg" style="font-size:16px; margin: 15px 0; color: #111;"></p>
             <button onclick="document.getElementById('custom-alert').style.display='none'" class="btn-action" style="background-color: #0F9D58; width: 100%;">Aceptar</button>
         </div>
     </div>
 
     <script>
+        // LA URL DE TU APPS SCRIPT
         const API_URL = "https://script.google.com/macros/s/AKfycbwXi4Es2kt1ok_75jkI8DEl0Q91gbn7YfePJ-EhZxwA34iZrz23tsjQxhFQzTSKpJcE/exec"; 
 
         let datosGlobales = [];
@@ -149,13 +143,9 @@
         let fotoTomada = false;
         let canvasFirma, ctxFirma, dibujando = false, haFirmado = false;
 
-        // ==========================================
-        // 🔒 SISTEMA DE LLAVE DIGITAL (Dispositivo Físico)
-        // ==========================================
         window.onload = function() {
-            let llaveGuardada = localStorage.getItem("SISAMEX_KEY");
+            let llaveGuardada = localStorage.getItem("SISAMEX_KIOSCO_KEY");
             if (llaveGuardada === "AUTORIZADO_SOCIOTEC") {
-                // El equipo ya está validado, quitamos pantalla roja y mostramos login
                 document.getElementById('pantalla-bloqueo').style.display = 'none';
                 document.getElementById('sala-login').style.display = 'block';
             }
@@ -163,7 +153,6 @@
 
         function intentarVincularDispositivo() {
             let comando = document.getElementById('input-llave-maestra').value.trim();
-            // Este es el COMANDO SECRETO que debes ingresar para autorizar una PC nueva
             if (comando === "SISAMEX_VINCULAR_SALA") {
                 localStorage.setItem("SISAMEX_KIOSCO_KEY", "AUTORIZADO_SOCIOTEC");
                 document.getElementById('pantalla-bloqueo').style.display = 'none';
@@ -172,28 +161,23 @@
                 alert("Comando incorrecto.");
             }
         }
-        // ==========================================
 
-        // V94: Función para el Ojito de la Contraseña
         function togglePasswordVisibility() {
             let passInput = document.getElementById('input-sala-pass');
             let ojoIcon = document.getElementById('ojo-pass');
             if (passInput.type === "password") {
                 passInput.type = "text";
-                ojoIcon.innerText = "🙈"; // Cambia el ícono
+                ojoIcon.innerText = "🙈";
             } else {
                 passInput.type = "password";
-                ojoIcon.innerText = "👁️"; // Regresa al ícono original
+                ojoIcon.innerText = "👁️";
             }
         }
 
-        // V94: Función de Cierre de Sesión Suave
         function cerrarSesionKiosco() {
-            // Ocultar lista de cursos y regresar a Login
             document.getElementById('sala-lista-cursos').style.display = 'none';
             document.getElementById('sala-login').style.display = 'block';
             
-            // Limpiar campos y botones
             document.getElementById('input-sala-pass').value = '';
             document.getElementById('input-sala-pass').type = 'password';
             document.getElementById('ojo-pass').innerText = "👁️";
@@ -201,9 +185,6 @@
             document.getElementById('btn-login').innerText = "Ingresar";
             document.getElementById('msg-auth').style.display = 'none';
             
-            // Limpiar memoria
-            datosGlobales = [];
-            cursosDeHoyLista = [];
             cursoAuditando = null;
         }
 
@@ -214,35 +195,24 @@
         }
 
         function verificarSeguridadKiosco() {
-            let cajaPass = document.getElementById('input-sala-pass');
-            let pass = cajaPass.value;
+            let pass = document.getElementById('input-sala-pass').value;
             let plantaSelec = document.getElementById('input-sala-planta').value;
             let btn = document.getElementById('btn-login');
             let msgAuth = document.getElementById('msg-auth');
 
-            if (!pass) {
-                return mostrarAlerta("Por favor, ingresa la contraseña.", "Dato Faltante");
-            }
+            if (!pass) return mostrarAlerta("Por favor, ingresa la contraseña.", "Dato Faltante");
+            if (pass !== "Sisamex" && pass !== "SisamexAdmin_Bypass") return mostrarAlerta("La contraseña ingresada es incorrecta.", "Acceso Denegado"); 
 
-            if (pass !== "Sisamex" && pass !== "SisamexAdmin_Bypass") { 
-                return mostrarAlerta("La contraseña ingresada es incorrecta.", "Acceso Denegado"); 
-            }
-
-            btn.disabled = true;
-            btn.innerText = "Cargando...";
-            msgAuth.style.display = 'block';
-
-            intentarCargarDatos(plantaSelec, 1);
+            btn.disabled = true; btn.innerText = "Cargando..."; msgAuth.style.display = 'block';
+            intentarCargarDatosKiosco(plantaSelec, 1);
         }
 
-        function intentarCargarDatos(plantaSelec, intento) {
+        function intentarCargarDatosKiosco(plantaSelec, intento) {
             let btn = document.getElementById('btn-login');
             let msgAuth = document.getElementById('msg-auth');
             let enlaceFresco = API_URL + "?action=api_cursos&planta=" + plantaSelec + "&nocache=" + new Date().getTime();
 
-            if(intento > 1) {
-                btn.innerText = "Reintentando... (" + intento + "/2)";
-            }
+            if(intento > 1) btn.innerText = "Reintentando... (" + intento + "/2)";
 
             fetch(enlaceFresco)
                 .then(response => response.text())
@@ -256,57 +226,35 @@
                         document.getElementById('sala-lista-cursos').style.display = 'flex'; 
                         cargarCursosDelDia(datosPC);
                     } catch (e) {
-                        throw new Error("Error en el formato de datos devuelto por el servidor.");
+                        throw new Error("Error en el formato devuelto por el servidor.");
                     }
                 })
                 .catch(err => {
                     if (intento < 3) {
-                        setTimeout(() => intentarCargarDatos(plantaSelec, intento + 1), 3000);
+                        setTimeout(() => intentarCargarDatosKiosco(plantaSelec, intento + 1), 3000);
                     } else {
                         mostrarAlerta("Google está tardando más de lo normal en leer el archivo. Por favor, vuelve a intentar.", "Aviso de Conexión");
-                        btn.innerText = "Ingresar";
-                        btn.disabled = false;
-                        msgAuth.style.display = 'none';
+                        btn.innerText = "Ingresar"; btn.disabled = false; msgAuth.style.display = 'none';
                     }
                 });
         }
 
         function cargarCursosDelDia(datosPC) {
             let hoyObj = new Date(); 
-            let y = hoyObj.getFullYear(); 
-            let m = (hoyObj.getMonth() + 1).toString().padStart(2, '0'); 
-            let d = hoyObj.getDate().toString().padStart(2, '0');
+            let y = hoyObj.getFullYear(); let m = (hoyObj.getMonth() + 1).toString().padStart(2, '0'); let d = hoyObj.getDate().toString().padStart(2, '0');
             let fechaHoyStr = y + "-" + m + "-" + d;
-            
             document.getElementById('txt-fecha-hoy').innerText = "Fecha: " + d + "/" + m + "/" + y;
 
             let cursosInduccion = datosGlobales.filter(c => c.fecha === fechaHoyStr && c.instructor !== "Por asignar" && !c.temaAgrupado.toUpperCase().includes("COMIDA"));
             let cursosPlanC = datosPC.filter(c => c.fechaA === fechaHoyStr && c.instructor !== "Por asignar");
 
             cursosDeHoyLista = [];
-            cursosInduccion.forEach(c => cursosDeHoyLista.push({ 
-                tipo: "Inducción", 
-                idCurso: c.idCurso, 
-                curso: c.temaAgrupado, 
-                instructor: c.instructor,
-                instructorFirma: c.instructorFirma || c.instructor,
-                grupo: c.grupo, 
-                minutos: c.minutosCatalogo || c.minutosAutorizados,
-                horario: c.horaFiltro, 
-                fecha: c.fecha 
-            }));
-            cursosPlanC.forEach(c => cursosDeHoyLista.push({ 
-                tipo: "Plan Carrera", idCurso: c.idCurso, curso: c.curso, 
-                instructor: c.instructor, instructorFirma: c.instructor, 
-                grupo: "N/A", minutos: c.minutosAutorizados, horario: c.horario, fecha: c.fechaA 
-            }));
-            let contenedor = document.getElementById('contenedor-cursos-hoy'); 
-            contenedor.innerHTML = '';
+            cursosInduccion.forEach(c => cursosDeHoyLista.push({ tipo: "Inducción", idCurso: c.idCurso, curso: c.temaAgrupado, instructor: c.instructor, instructorFirma: c.instructorFirma || c.instructor, grupo: c.grupo, minutos: c.minutosCatalogo || c.minutosAutorizados, horario: c.horaFiltro, fecha: c.fecha }));
+            cursosPlanC.forEach(c => cursosDeHoyLista.push({ tipo: "Plan Carrera", idCurso: c.idCurso, curso: c.curso, instructor: c.instructor, instructorFirma: c.instructor, grupo: "N/A", minutos: c.minutosAutorizados, horario: c.horario, fecha: c.fechaA }));
             
-            if (cursosDeHoyLista.length === 0) { 
-                contenedor.innerHTML = '<p style="color: #fff; font-size: 18px;">No hay cursos programados para hoy.</p>'; 
-                return; 
-            }
+            let contenedor = document.getElementById('contenedor-cursos-hoy'); contenedor.innerHTML = '';
+            
+            if (cursosDeHoyLista.length === 0) { contenedor.innerHTML = '<p style="color: #fff; font-size: 18px;">No hay cursos programados para hoy.</p>'; return; }
 
             cursosDeHoyLista.forEach((curso, index) => {
                 let m = curso.minutos; let textMin = m > 0 ? (m + " mins") : "Sin tiempo";
@@ -331,19 +279,10 @@
             if(partesH.length >= 1) {
                 let startMatch = partesH[0].trim().match(/(\d+):(\d+)\s*(a|p)/i);
                 if(startMatch) {
-                    let h = parseInt(startMatch[1], 10);
-                    let m = parseInt(startMatch[2], 10);
-                    let ampm = startMatch[3].toLowerCase();
-                    if(ampm === 'p' && h < 12) h += 12;
-                    if(ampm === 'a' && h === 12) h = 0;
-                    
-                    let ahora = new Date();
-                    let horaInicioProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), h, m, 0);
-                    
-                    if (ahora > horaInicioProgramada) {
-                        let diffMs = ahora - horaInicioProgramada;
-                        minutosDeRetraso = Math.floor(diffMs / 60000); 
-                    }
+                    let h = parseInt(startMatch[1], 10); let m = parseInt(startMatch[2], 10); let ampm = startMatch[3].toLowerCase();
+                    if(ampm === 'p' && h < 12) h += 12; if(ampm === 'a' && h === 12) h = 0;
+                    let ahora = new Date(); let horaInicioProgramada = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), h, m, 0);
+                    if (ahora > horaInicioProgramada) { let diffMs = ahora - horaInicioProgramada; minutosDeRetraso = Math.floor(diffMs / 60000); }
                 }
             }
 
@@ -357,60 +296,39 @@
             document.getElementById('sala-curso-grupo').innerText = cursoAuditando.grupo;
             
             let msjDuracion = cursoAuditando.minutos + " minutos";
-            if (minutosDeRetraso > 0) {
-                msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(-${minutosDeRetraso} min descontados por retardo)</span>`;
-            }
+            if (minutosDeRetraso > 0) { msjDuracion += ` <span style="color:#C8102E; font-size:15px; margin-left:10px;">(-${minutosDeRetraso} min descontados por retardo)</span>`; }
             document.getElementById('sala-curso-duracion').innerHTML = msjDuracion;
 
             horaInicioClaseReal = new Date(); 
             tiempoRestanteSegundos = minutosSugeridos * 60; 
             
-            // Restablecer estilos en caso de que se hayan activado antes
             document.getElementById('btn-pre-finalizar').style.display = 'none';
             document.getElementById('timer-display').style.color = '#0F9D58';
             document.getElementById('sala-activa').classList.remove('alarma-activa');
             document.getElementById('txt-timer-instruccion').innerText = "Tiempo restante sugerido:";
 
-            if (tiempoRestanteSegundos <= 0) {
-                activarAlarmaVisualYSonora();
-            } else {
+            if (tiempoRestanteSegundos <= 0) { activarAlarmaVisualYSonora(); } else {
                 actualizarPantallaTimer();
                 intervaloTimer = setInterval(() => {
-                    tiempoRestanteSegundos--; 
-                    actualizarPantallaTimer();
-                    
-                    if (tiempoRestanteSegundos <= 0) { 
-                        clearInterval(intervaloTimer); 
-                        activarAlarmaVisualYSonora();
-                    }
+                    tiempoRestanteSegundos--; actualizarPantallaTimer();
+                    if (tiempoRestanteSegundos <= 0) { clearInterval(intervaloTimer); activarAlarmaVisualYSonora(); }
                 }, 1000);
             }
         }
 
-        // ==========================================
-        // 🔔 SISTEMA DE ALARMA VISUAL Y SONORA
-        // ==========================================
         function activarAlarmaVisualYSonora() {
             document.getElementById('timer-display').innerText = "00:00:00";
-            document.getElementById('timer-display').style.color = '#ff4d4d'; // Rojo alerta
+            document.getElementById('timer-display').style.color = '#ff4d4d'; 
             document.getElementById('txt-timer-instruccion').innerText = "⚠️ TIEMPO FINALIZADO ⚠️";
             document.getElementById('txt-timer-instruccion').style.color = '#ff4d4d';
             document.getElementById('btn-pre-finalizar').style.display = 'inline-block';
-            
-            // Efecto visual de parpadeo
             document.getElementById('sala-activa').classList.add('alarma-activa');
             
-            // Efecto de sonido (Se requiere iteracción previa del usuario para que el navegador lo permita)
             try {
-                let audio = document.getElementById('audioAlarma');
-                audio.play();
-                // Detener el sonido después de 4 segundos
+                let audio = document.getElementById('audioAlarma'); audio.play();
                 setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 4000);
-            } catch(e) {
-                console.log("El navegador bloqueó el autoplay del sonido.");
-            }
+            } catch(e) { console.log("El navegador bloqueó el autoplay del sonido."); }
         }
-        // ==========================================
 
         function actualizarPantallaTimer() {
             if (tiempoRestanteSegundos < 0) tiempoRestanteSegundos = 0;
@@ -419,13 +337,10 @@
         }
 
         function prepararFirmaAuditoria() {
-            // Detener alarma y sonido si siguen activos
             document.getElementById('sala-activa').classList.remove('alarma-activa');
             try { document.getElementById('audioAlarma').pause(); } catch(e){}
 
-            let horaFinReal = new Date();
-            let diferenciaMs = horaFinReal - horaInicioClaseReal;
-            let minutosReales = Math.round(diferenciaMs / 60000);
+            let horaFinReal = new Date(); let diferenciaMs = horaFinReal - horaInicioClaseReal; let minutosReales = Math.round(diferenciaMs / 60000);
             
             cursoAuditando.minutosRealesEfectivos = minutosReales;
             cursoAuditando.horaInicioFormateada = horaInicioClaseReal.getHours().toString().padStart(2, '0') + ":" + horaInicioClaseReal.getMinutes().toString().padStart(2, '0');
@@ -434,17 +349,9 @@
             document.getElementById('sala-activa').style.display = 'none'; 
             document.getElementById('sala-firma').style.display = 'flex';
             
-            canvasFirma = document.getElementById('canvasFirma'); 
-            ctxFirma = canvasFirma.getContext('2d'); 
-            limpiarFirma();
+            canvasFirma = document.getElementById('canvasFirma'); ctxFirma = canvasFirma.getContext('2d'); limpiarFirma();
 
-            function getPos(e) { 
-                let rect = canvasFirma.getBoundingClientRect(); 
-                let evt = e.touches ? e.touches[0] : e; 
-                let scaleX = canvasFirma.width / rect.width; 
-                let scaleY = canvasFirma.height / rect.height; 
-                return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY }; 
-            }
+            function getPos(e) { let rect = canvasFirma.getBoundingClientRect(); let evt = e.touches ? e.touches[0] : e; let scaleX = canvasFirma.width / rect.width; let scaleY = canvasFirma.height / rect.height; return { x: (evt.clientX - rect.left) * scaleX, y: (evt.clientY - rect.top) * scaleY }; }
 
             canvasFirma.onmousedown = (e) => { dibujando = true; haFirmado = true; let pos = getPos(e); ctxFirma.beginPath(); ctxFirma.moveTo(pos.x, pos.y); };
             canvasFirma.onmousemove = (e) => { if (dibujando) { let pos = getPos(e); ctxFirma.lineTo(pos.x, pos.y); ctxFirma.stroke(); } };
@@ -457,129 +364,54 @@
             if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: true })
                     .then(function(stream) {
-                        streamCamara = stream;
-                        var video = document.getElementById('videoCamara');
-                        video.srcObject = stream;
-                        video.play();
-                        
-                        video.style.display = 'block';
-                        document.getElementById('canvasFotoCam').style.display = 'none';
-                        document.getElementById('fallbackCamara').style.display = 'none';
-                        
-                        document.getElementById('btn-tomar-foto').style.display = 'inline-block';
-                        document.getElementById('btn-retomar-foto').style.display = 'none';
+                        streamCamara = stream; var video = document.getElementById('videoCamara'); video.srcObject = stream; video.play();
+                        video.style.display = 'block'; document.getElementById('canvasFotoCam').style.display = 'none'; document.getElementById('fallbackCamara').style.display = 'none';
+                        document.getElementById('btn-tomar-foto').style.display = 'inline-block'; document.getElementById('btn-retomar-foto').style.display = 'none';
                     })
                     .catch(function(err) {
-                        console.warn("Cámara denegada: ", err);
-                        document.getElementById('fallbackCamara').style.display = 'block';
-                        document.getElementById('videoCamara').style.display = 'none';
+                        console.warn("Cámara denegada: ", err); document.getElementById('fallbackCamara').style.display = 'block'; document.getElementById('videoCamara').style.display = 'none';
                     });
-            } else {
-                document.getElementById('fallbackCamara').style.display = 'block';
-            }
+            } else { document.getElementById('fallbackCamara').style.display = 'block'; }
         }
 
         function tomarFoto() {
-            var video = document.getElementById('videoCamara');
-            var canvas = document.getElementById('canvasFotoCam');
-            var ctx = canvas.getContext('2d');
+            var video = document.getElementById('videoCamara'); var canvas = document.getElementById('canvasFotoCam'); var ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            video.style.display = 'none';
-            canvas.style.display = 'block';
-            document.getElementById('btn-tomar-foto').style.display = 'none';
-            document.getElementById('btn-retomar-foto').style.display = 'inline-block';
-            fotoTomada = true;
+            video.style.display = 'none'; canvas.style.display = 'block';
+            document.getElementById('btn-tomar-foto').style.display = 'none'; document.getElementById('btn-retomar-foto').style.display = 'inline-block'; fotoTomada = true;
         }
 
         function retomarFoto() {
-            document.getElementById('videoCamara').style.display = 'block';
-            document.getElementById('canvasFotoCam').style.display = 'none';
-            document.getElementById('btn-tomar-foto').style.display = 'inline-block';
-            document.getElementById('btn-retomar-foto').style.display = 'none';
-            fotoTomada = false;
+            document.getElementById('videoCamara').style.display = 'block'; document.getElementById('canvasFotoCam').style.display = 'none';
+            document.getElementById('btn-tomar-foto').style.display = 'inline-block'; document.getElementById('btn-retomar-foto').style.display = 'none'; fotoTomada = false;
         }
 
-        function limpiarFirma() { 
-            ctxFirma.globalCompositeOperation = "source-over"; 
-            ctxFirma.fillStyle = "#FFFFFF"; 
-            ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height); 
-            ctxFirma.strokeStyle = "#000000"; 
-            ctxFirma.lineWidth = 3; 
-            ctxFirma.lineCap = "round"; 
-            haFirmado = false; 
-        }
+        function limpiarFirma() { ctxFirma.globalCompositeOperation = "source-over"; ctxFirma.fillStyle = "#FFFFFF"; ctxFirma.fillRect(0, 0, canvasFirma.width, canvasFirma.height); ctxFirma.strokeStyle = "#000000"; ctxFirma.lineWidth = 3; ctxFirma.lineCap = "round"; haFirmado = false; }
 
         function guardarFirmaYEnviar() {
             if(!haFirmado) return mostrarAlerta("Por favor, dibuja tu firma en el recuadro blanco.");
             if(!fotoTomada && streamCamara) return mostrarAlerta("Por favor, haz clic en 'Capturar Foto'.");
 
-            let btnDiv = document.getElementById('btn-capturar-firma'); 
-            let txtSpan = document.getElementById('txt-btn-enviar');
-            txtSpan.innerHTML = "Enviando..."; 
-            btnDiv.style.pointerEvents = 'none';
-            btnDiv.style.opacity = '0.5';
+            let btnDiv = document.getElementById('btn-capturar-firma'); let txtSpan = document.getElementById('txt-btn-enviar');
+            txtSpan.innerHTML = "Enviando..."; btnDiv.style.pointerEvents = 'none'; btnDiv.style.opacity = '0.5';
             
             let base64Firma = canvasFirma.toDataURL('image/jpeg', 0.9).split(',')[1];
-            
             var base64Foto = "NO_CAMERA";
-            if (fotoTomada) {
-                var canvasFoto = document.getElementById('canvasFotoCam');
-                base64Foto = canvasFoto.toDataURL('image/jpeg', 0.8).split(',')[1];
-            }
+            if (fotoTomada) { var canvasFoto = document.getElementById('canvasFotoCam'); base64Foto = canvasFoto.toDataURL('image/jpeg', 0.8).split(',')[1]; }
 
             let nombreArchivoCorto = cursoAuditando.fecha.replace(/-/g, '') + "_" + cursoAuditando.instructor.split(" ")[0] + "_" + cursoAuditando.curso.substring(0, 10).replace(/\s/g, '');
-            
-            let paqueteAuditoria = { 
-                idCurso: cursoAuditando.idCurso, 
-                curso: cursoAuditando.curso, 
-                instructor: cursoAuditando.instructorFirma, 
-                grupo: cursoAuditando.grupo, 
-                
-                horaInicioReal: cursoAuditando.horaInicioFormateada,
-                horaFinReal: cursoAuditando.horaFinFormateada,
-                minsClase: cursoAuditando.minutosRealesEfectivos,
-                minutosCatalogo: cursoAuditando.minutos,
-                
-                fecha: cursoAuditando.fecha, 
-                imagenBase64: base64Firma, 
-                fotoBase64: base64Foto, 
-                nombreArchivo: nombreArchivoCorto 
-            };
+            let paqueteAuditoria = { idCurso: cursoAuditando.idCurso, curso: cursoAuditando.curso, instructor: cursoAuditando.instructorFirma, grupo: cursoAuditando.grupo, horaInicioReal: cursoAuditando.horaInicioFormateada, horaFinReal: cursoAuditando.horaFinFormateada, minsClase: cursoAuditando.minutosRealesEfectivos, minutosCatalogo: cursoAuditando.minutos, fecha: cursoAuditando.fecha, imagenBase64: base64Firma, fotoBase64: base64Foto, nombreArchivo: nombreArchivoCorto };
 
-            fetch(API_URL, {
-                method: "POST",
-                redirect: "follow",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "guardarAuditoria", paquete: paqueteAuditoria })
-            })
+            fetch(API_URL, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "guardarAuditoria", paquete: paqueteAuditoria }) })
             .then(response => response.json())
             .then(data => {
                 if (data.status === "OK") { 
                     mostrarAlerta("✅ Evidencia capturada y guardada en Drive exitosamente.", "Auditoría Exitosa"); 
-                    
-                    setTimeout(() => {
-                        document.getElementById('custom-alert').style.display = 'none';
-                        document.getElementById('sala-firma').style.display = 'none';
-                        document.getElementById('sala-lista-cursos').style.display = 'flex';
-                        // Detener la cámara
-                        if (streamCamara) {
-                            streamCamara.getTracks().forEach(track => track.stop());
-                        }
-                    }, 2500);
-
+                    setTimeout(() => { document.getElementById('custom-alert').style.display = 'none'; document.getElementById('sala-firma').style.display = 'none'; document.getElementById('sala-lista-cursos').style.display = 'flex'; if (streamCamara) { streamCamara.getTracks().forEach(track => track.stop()); } }, 2500);
                 } else { 
-                    mostrarAlerta(data.status, "Error de Apps Script"); 
-                    txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
-                    btnDiv.style.pointerEvents = 'auto';
-                    btnDiv.style.opacity = '1';
+                    mostrarAlerta(data.status, "Error de Apps Script"); txtSpan.innerHTML = "✅ Confirmar y Enviar"; btnDiv.style.pointerEvents = 'auto'; btnDiv.style.opacity = '1';
                 }
-            })
-            .catch(err => { 
-                mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); 
-                txtSpan.innerHTML = "✅ Confirmar y Enviar"; 
-                btnDiv.style.pointerEvents = 'auto';
-                btnDiv.style.opacity = '1';
-            });
+            }).catch(err => { mostrarAlerta("Fallo en la comunicación con el servidor: " + err, "Error Crítico"); txtSpan.innerHTML = "✅ Confirmar y Enviar"; btnDiv.style.pointerEvents = 'auto'; btnDiv.style.opacity = '1'; });
         }
     </script>
 </body>
