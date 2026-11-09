@@ -12,7 +12,7 @@
         .btn-action:hover { opacity: 0.8; }
         .btn-action:disabled { background-color: #555 !important; cursor: not-allowed; }
         
-        .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 320px; margin-bottom: 20px; outline: none; background: #222; color: white; }
+        .sala-input { padding: 15px; font-size: 18px; border-radius: 8px; border: 1px solid #333; text-align: center; width: 100%; max-width: 320px; outline: none; background: #222; color: white; box-sizing: border-box;}
         .sala-input::placeholder { color: #777; font-size: 15px; }
         
         .timer-gigante { font-size: 90px; font-weight: bold; color: #0F9D58; margin: 0; font-family: monospace; transition: color 0.3s; }
@@ -48,7 +48,7 @@
         <button class="btn-action" style="background-color: #333;" onclick="intentarVincularDispositivo()">Vincular Equipo</button>
     </div>
 
-    <!-- 2. PANTALLA NORMAL DE LOGIN (Solo Contraseña) -->
+    <!-- 2. PANTALLA NORMAL DE LOGIN -->
     <div class="sala-dark" id="sala-login" style="display: none;">
         <h1 style="font-size: 32px; color: #0F9D58; margin-bottom: 10px;">🎓 Auditoría SISAMEX</h1>
         <p style="font-size: 16px; color: #aaa; margin-bottom: 30px;">Selecciona tu planta e ingresa la contraseña de la sala.</p>
@@ -59,8 +59,11 @@
         </select>
         <br>
         
-        <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 25px;">
-        <br>
+        <!-- V94: Contenedor con Ojito para la Contraseña -->
+        <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto 25px auto;">
+            <input type="password" id="input-sala-pass" class="sala-input" placeholder="Contraseña de Sistema" style="margin-bottom: 0; padding-right: 45px;">
+            <span id="ojo-pass" onclick="togglePasswordVisibility()" style="position: absolute; right: 15px; top: 15px; cursor: pointer; font-size: 20px; user-select: none;" title="Mostrar/Ocultar Contraseña">👁️</span>
+        </div>
         
         <button class="btn-action" id="btn-login" style="background-color: #0F9D58; width: 100%; max-width: 320px; padding: 15px; font-size: 18px;" onclick="verificarSeguridadKiosco()">Ingresar</button>
         <p id="msg-auth" style="color: #aaa; font-size: 13px; margin-top: 15px; display: none;">⏳ Cargando...</p>
@@ -73,7 +76,8 @@
         </div>
         <div id="contenedor-cursos-hoy" style="width: 100%; display: flex; flex-direction: column; gap: 15px;"></div>
         <div style="width: 100%; text-align: center; margin-top: 15px;">
-            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="location.reload()">Regresar al Inicio</button>
+            <!-- V94: Se cambió location.reload() por una función de cierre suave -->
+            <button class="btn-action" style="background-color: #444; width: 100%; max-width: 300px; font-size: 18px; padding: 15px;" onclick="cerrarSesionKiosco()">Regresar al Inicio</button>
         </div>
     </div>
 
@@ -169,6 +173,39 @@
             }
         }
         // ==========================================
+
+        // V94: Función para el Ojito de la Contraseña
+        function togglePasswordVisibility() {
+            let passInput = document.getElementById('input-sala-pass');
+            let ojoIcon = document.getElementById('ojo-pass');
+            if (passInput.type === "password") {
+                passInput.type = "text";
+                ojoIcon.innerText = "🙈"; // Cambia el ícono
+            } else {
+                passInput.type = "password";
+                ojoIcon.innerText = "👁️"; // Regresa al ícono original
+            }
+        }
+
+        // V94: Función de Cierre de Sesión Suave
+        function cerrarSesionKiosco() {
+            // Ocultar lista de cursos y regresar a Login
+            document.getElementById('sala-lista-cursos').style.display = 'none';
+            document.getElementById('sala-login').style.display = 'block';
+            
+            // Limpiar campos y botones
+            document.getElementById('input-sala-pass').value = '';
+            document.getElementById('input-sala-pass').type = 'password';
+            document.getElementById('ojo-pass').innerText = "👁️";
+            document.getElementById('btn-login').disabled = false;
+            document.getElementById('btn-login').innerText = "Ingresar";
+            document.getElementById('msg-auth').style.display = 'none';
+            
+            // Limpiar memoria
+            datosGlobales = [];
+            cursosDeHoyLista = [];
+            cursoAuditando = null;
+        }
 
         function mostrarAlerta(mensaje, titulo = "SISAMEX") {
             document.getElementById('custom-alert-title').innerText = titulo;
